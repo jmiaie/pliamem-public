@@ -2,34 +2,36 @@
  * index.js — Pliamem main class
  *
  * Usage:
- *   const { Pliamem } = require('./pliamem');
- *   const pliamem = new Pliamem({ layers, weights });
+ *   const { Pliamem } = require('./index');
+ *   const pliamem = new Pliamem();
  *   const results = await pliamem.recall('query');
  */
 
 const { rank } = require('./ranker');
-const { OmpaAdapter } = require('./adapters/ompa');
-const { KgAdapter } = require('./adapters/kg');
-const { FlatFileAdapter } = require('./adapters/flat');
-const { DailyLogAdapter } = require('./adapters/dailylog');
-const { NoticesAdapter } = require('./adapters/notices');
 
-const ADAPTER_MAP = {
-  ompa: OmpaAdapter,
-  kg: KgAdapter,
-  flat: FlatFileAdapter,
-  dailylog: DailyLogAdapter,
-  notices: NoticesAdapter,
+const DEFAULT_LAYER_PATHS = {
+  brain:    process.env.PLIAMEM_OMPA_VAULT    || `${process.env.HOME || ''}/.ompa/shared`,
+  kg:       process.env.PLIAMEM_KG_PATH        || `${process.env.HOME || ''}/.ompa/knowledge-graph.json`,
+  docs:     process.env.PLIAMEM_DOCS_DIR        || `${process.env.HOME || ''}/memory`,
+  logs:     process.env.PLIAMEM_LOGS_DIR        || `${process.env.HOME || ''}/memory`,
+  notices:  process.env.PLIAMEM_NOTICES_PATH   || `${process.env.HOME || ''}/vault/TEAM_NOTICES.md`,
 };
 
-/**
- * Pliamem — Unified Memory Recall
- *
- * @param {object} config
- * @param {object} config.layers       - Layer name -> adapter config or adapter instance
- * @param {object} config.weights     - Layer name -> numeric weight (default 1.0)
- * @param {object} config.opts         - Global search options { limit, recent, ... }
- */
+const DEFAULT_WEIGHTS = { brain: 1.0, kg: 0.8, docs: 0.5, logs: 0.4, notices: 0.3 };
+
+function getAdapterClass(type) {
+  switch (type) {
+    case 'ompa':     return require('./adapters/ompa').OmpaAdapter;
+    case 'kg':       return require('./adapters/kg').KgAdapter;
+    case 'flat':     return require('./adapters/flat').FlatFileAdapter;
+    case 'dailylog': return require('./adapters/dailylog').DailyLogAdapter;
+    case 'notices':  return require('./adapters/notices').NoticesAdapter;
+    default:         return null;
+  }
+}
+
+const LAYER_TYPE = { brain: 'ompa', kg: 'kg', docs: 'flat', logs: 'dailylog', notices: 'notices' };
+
 class Pliamem {
   constructor(config = {}) {
     this.weights = config.weights || {};
@@ -38,116 +40,64 @@ class Pliamem {
     this._initialized = false;
   }
 
-  /**
-   * Initialize adapters from config.
-   * @private
-   */
-  _init() {
+  _autoInit() {
     if (this._initialized) return;
     this._initialized = true;
+    const fs = require('fs');
+    for (const [name, path] of Object.entries(DEFAULT_LAYER_PATHS)) {
+      if (!path || !fs.existsSync(path)) continue;
+      const type = LAYER_TYPE[name];
+      const AdapterClass = getAdapterClass(type);
+      if (!AdapterClass) continue;
+      try {
+        this._adapters[name] = new AdapterClass({ path });
+        if (this.weights[name] === undefined) {
+          this.weights[name] = DEFAULT_WEIGHTS[name] || 1.0;
+        }
+      } catch (_) {}
+    }
   }
 
-  /**
-   * Get or create an adapter by name.
-   * @private
-   */
-  _getAdapter(name, cfg) {
-    if (this._adapters[name]) return this._adapters[name];
-
-    if (typeof cfg === 'object' && !(cfg instanceof BaseAdapter)) {
-      // cfg is a plain config object { type, path, ... }
-      const AdapterClass = ADAPTER_MAP[cfg.type || name];
+  setLayer(name, cfg) {
+    if (cfg && typeof cfg.search === 'function') {
+      this._adapters[name] = cfg;
+    } else if (cfg && cfg.type) {
+      const AdapterClass = getAdapterClass(cfg.type);
       if (!AdapterClass) throw new Error(`Unknown adapter type: ${cfg.type}`);
       this._adapters[name] = new AdapterClass(cfg);
-    } else if (typeof cfg === 'object' && cfg.search) {
-      // cfg is already an adapter instance
-      this._adapters[name] = cfg;
-    } else {
-      throw new Error(`Adapter [${name}] must be an instance or { type, path } config`);
     }
-
-    return this._adapters[name];
   }
 
-  /**
-   * Register or update a layer adapter.
-   * @param {string} name - Layer name
-   * @param {object|BaseAdapter} adapter - Adapter instance or config
-   */
-  setLayer(name, adapter) {
-    this._getAdapter(name, adapter);
-  }
-
-  /**
-   * Set the weight for a layer.
-   * @param {string} name - Layer name
-   * @param {number} weight - Score multiplier
-   */
   setWeight(name, weight) {
     this.weights[name] = weight;
   }
 
-  /**
-   * Perform unified recall across all configured layers.
-   * @param {string} query - Search query
-   * @param {object} searchOpts - { layer, layers, limit, recent, json }
-   * @returns {Promise<Result[]>}
-   */
-  async recall(query, searchOpts = {}) {
-    this._init();
-
-    const layers = searchOpts.layer
-      ? [searchOpts.layer]
-      : searchOpts.layers || Object.keys(this._adapters);
-
-    const rawResults = [];
-
-    await Promise.all(
-      layers.map(async (name) => {
-        try {
-          const adapter = this._adapters[name];
-          if (!adapter) return;
-          const results = await adapter.search(query, {
-            limit: searchOpts.limit || 5,
-            recent: searchOpts.recent,
-          });
-          for (const r of results) {
-            rawResults.push({ ...r, layer: name });
-          }
-        } catch (e) {
-          // Adapter failed — skip silently, other layers still respond
-          console.error(`[pliamem] adapter [${name}] error: ${e.message}`);
-        }
-      })
-    );
-
-    return rank(rawResults, this.weights, searchOpts);
+  async recall(query, opts = {}) {
+    this._autoInit();
+    const layers = opts.layer ? [opts.layer] : opts.layers || Object.keys(this._adapters);
+    const raw = [];
+    await Promise.all(layers.map(async (name) => {
+      try {
+        const adapter = this._adapters[name];
+        if (!adapter) return;
+        const hits = await adapter.search(query, { limit: opts.limit || 5, recent: opts.recent });
+        hits.forEach(r => raw.push({ ...r, layer: name }));
+      } catch (e) {
+        console.error(`[pliamem] adapter [${name}] error: ${e.message}`);
+      }
+    }));
+    return rank(raw, this.weights, opts);
   }
 
-  /**
-   * Check health of all configured layers.
-   * @returns {Promise<object>} - { layerName: { ok, stats } }
-   */
   async status() {
-    this._init();
+    this._autoInit();
     const result = {};
-    const entries = Object.entries(this._adapters);
-
-    await Promise.all(
-      entries.map(async ([name, adapter]) => {
-        try {
-          result[name] = await adapter.status();
-        } catch (e) {
-          result[name] = { ok: false, error: e.message };
-        }
-      })
-    );
-
+    await Promise.all(Object.entries(this._adapters).map(async ([name, adapter]) => {
+      try { result[name] = await adapter.status(); }
+      catch (e) { result[name] = { ok: false, error: e.message }; }
+    }));
     return result;
   }
 }
 
-// Make BaseAdapter available for custom adapter injection
-const { BaseAdapter } = require('./adapters/base');
-
-module.exports = { Pliamem, BaseAdapter };
+module.exports = { Pliamem };
