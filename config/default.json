@@ -1,0 +1,36 @@
+{
+  ...,
+  adapters: {
+    ompa: {
+      type: 'ompa',
+      path: '/home/ubuntu/.ompa/shared',
+      weight: 1.0
+    },
+    kg: {
+      type: 'kg',
+      path: '/home/ubuntu/.ompa/knowledge-graph.json',
+      weight: 0.8
+    },
+    docs: {
+      type: 'flat',
+      path: '/home/ubuntu/memory',
+      pattern: '*.md',
+      maxDepth: 3,
+      weight: 0.5
+    },
+    logs: {
+      type: 'dailylog',
+      path: '/home/ubuntu/memory',
+      weight: 0.4
+    },
+    notices: {
+      type: 'notices',
+      path: '/home/ubuntu/vault/TEAM_NOTICES.md',
+      weight: 0.3
+    }
+  },
+  ranker: {
+    recencyDecay: true,
+    dedup: true
+  }
+}

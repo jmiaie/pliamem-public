@@ -1,0 +1,25 @@
+{
+  "name": "pliamem",
+  "version": "0.1.0",
+  "description": "Unified memory recall for AI agents — search your entire memory stack from one query",
+  "main": "src/index.js",
+  "bin": {
+    "pliamem": "src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "search": "node src/cli.js search",
+    "status": "node src/cli.js layers status"
+  },
+  "keywords": [
+    "ai",
+    "memory",
+    "agent",
+    "recall",
+    "unified-search",
+    "knowledge-graph",
+    "vector-memory"
+  ],
+  "author": "Jeffrey Milam / Micap AI LLC",
+  "license": "SEE LICENSE IN LICENSE"
+}
