@@ -9,19 +9,20 @@ pliamem (pronounced "PLY-ah-mem") is a **pliable memory** — a unified recall l
 ## Install
 
 ```bash
-git clone https://github.com/micap-ai/pliamem.git
+git clone https://github.com/jmiaie/pliamem.git
 cd pliamem
-npm install
 ```
+
+No `npm install` required — zero dependencies by default. OMPA adapter requires Python 3.8+ with `ompa` installed (`pip install ompa`).
 
 ## Quick Start
 
 ```bash
-# Full recall across all memory layers
+# Zero-config (reads PLIAMEM_* environment variables)
 node src/cli.js search "ZTB Protocol"
 
-# Single layer
-node src/cli.js search "Tai" --layer brain
+# Search one layer
+node src/cli.js search "Tai" --layer=brain
 
 # Machine-readable output
 node src/cli.js search "resource-lens" --json
@@ -33,26 +34,41 @@ node src/cli.js search "model routing" --recent
 node src/cli.js layers status
 ```
 
-## As a Library
+## Live Demo
 
-```javascript
-const { Pliamem } = require('./src');
-
-const pliamem = new Pliamem({
-  layers: {
-    brain: { type: 'ompa', path: './brain' },
-    kg: { type: 'kg', path: './knowledge-graph.json' },
-    docs: { type: 'flat', path: './memory' }
-  },
-  weights: { brain: 1.0, kg: 0.8, docs: 0.6 }
-});
-
-const results = await pliamem.recall('ZTB Protocol');
-results.forEach(r => {
-  console.log(`[${r.layer}] score: ${r.score.toFixed(2)}`);
-  console.log(`  ${r.excerpt.slice(0, 120)}`);
-});
 ```
+$ node src/cli.js search "ZTB Protocol"
+
+🔍 pliamem recall: "ZTB Protocol"
+────────────────────────────────────────────────────────────
+
+[1] brain (score: 0.700)
+  brain/ztb-protocol.md
+  ZTB Protocol v2.2...
+
+[2] kg (score: 0.168)
+  kg://memory-2026-03-25-0
+  Event: 2026-03-25 — Ingested ZTB Protocol 2.0...
+
+[3] docs (score: 0.158)
+  vault/ZTB_AUDIT.md
+  # ZTB Protocol Audit Report...
+
+────────────────────────────────────────────────────────────
+  12 results from 4 layers
+```
+
+## Environment Variables
+
+pliamem auto-initializes from these environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PLIAMEM_OMPA_VAULT` | Path to OMPA shared brain vault | `~/.ompa/shared` |
+| `PLIAMEM_KG_PATH` | Path to knowledge graph JSON | `~/.ompa/knowledge-graph.json` |
+| `PLIAMEM_DOCS_DIR` | Directory of markdown docs | `~/memory` |
+| `PLIAMEM_LOGS_DIR` | Directory of daily logs | `~/memory` |
+| `PLIAMEM_NOTICES_PATH` | Path to team notices file | `~/vault/TEAM_NOTICES.md` |
 
 ## Default Memory Layers
 
@@ -64,62 +80,40 @@ results.forEach(r => {
 | `logs` | Daily log adapter | Chronological `YYYY-MM-DD.md` session logs |
 | `notices` | Notices adapter | Versioned team notice blocks |
 
-## Architecture
-
-```
-pliamem
-├── adapters/        # One per memory layer (swappable)
-├── ranker.js        # Scores, weights, merges, dedupes
-├── config.js        # Layer + weight configuration
-└── cli.js           # Command-line interface
-```
-
-## Writing a Custom Adapter
+## As a Library
 
 ```javascript
-const { BaseAdapter } = require('./src/adapters/base');
+const { Pliamem } = require('./src');
 
-class MyMemoryAdapter extends BaseAdapter {
-  constructor(opts) {
-    super('my-memory', opts);
-    this.path = opts.path;
-  }
+const pliamem = new Pliamem();  // auto-initializes from env
 
-  async search(query) {
-    // Return: [{ path, score, excerpt, metadata }]
-    return [
-      {
-        path: 'my-memory/result.md',
-        score: 0.85,
-        excerpt: 'Found in my custom store...',
-        metadata: { source: 'custom' }
-      }
-    ];
-  }
+const results = await pliamem.recall('ZTB Protocol');
+results.forEach(r => {
+  console.log(`[${r.layer}] score: ${r.finalScore?.toFixed(2)}`);
+  console.log(`  ${r.excerpt?.slice(0, 120)}`);
+});
 
-  async status() {
-    return { ok: true, stats: { count: 42 } };
-  }
-}
-
+// Or with explicit config:
 const pliamem = new Pliamem({
-  layers: { myStore: new MyMemoryAdapter({ path: './my-data' }) }
+  layers: {
+    brain: new OmpaAdapter({ path: './brain' }),
+    kg: new KgAdapter({ path: './knowledge-graph.json' }),
+  },
+  weights: { brain: 1.0, kg: 0.8 }
 });
 ```
-
----
 
 ## Requirements
 
 - Node.js 18+
-- Python 3.8+ (for OMPA adapter)
+- Python 3.8+ (for OMPA adapter only)
 - OMPA (`pip install ompa`) if using the brain adapter
 
 ---
 
 ## License
 
-Copyright © 2026 Micap AI LLC. All rights reserved.
+Copyright 2026 Micap AI LLC. All rights reserved.
 
 ---
 
