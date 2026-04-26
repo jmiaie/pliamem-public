@@ -195,24 +195,16 @@ pliamem/
 │   ├── index.js              # Main entry — Pliamem class
 │   ├── cli.js                # CLI entry point
 │   ├── ranker.js             # Ranking + merge engine
-│   ├── adapters/
-│   │   ├── base.js           # Adapter interface
-│   │   ├── ompa.js           # OMPA brain adapter
-│   │   ├── kg.js             # Knowledge graph adapter
-│   │   ├── flat.js           # Flat file adapter
-│   │   ├── dailylog.js       # Daily log adapter
-│   │   └── notices.js        # Team notices adapter
-│   └── config.js             # Config loader
-├── scripts/
-│   └── ompa_search.py        # Python helper for OMPA adapter
+│   ├── defaults.js           # Shared constants (paths, weights, types)
+│   └── adapters/
+│       ├── base.js           # Adapter interface + SearchResult typedef
+│       ├── ompa.js           # OMPA brain adapter (Python subprocess)
+│       ├── kg.js             # Knowledge graph adapter
+│       ├── flat.js           # Flat file adapter
+│       ├── dailylog.js       # Daily log adapter
+│       └── notices.js        # Team notices adapter
 ├── docs/
-│   ├── adapter-guide.md      # How to write custom adapters
-│   ├── api-reference.md      # Programmatic API docs
-│   └── architecture.md       # System design
-├── tests/
-│   ├── ranker.test.js
-│   ├── adapters.test.js
-│   └── integration.test.js
+│   └── adapter-guide.md      # How to write custom adapters
 └── config/
     └── default.json          # Default layer config
 ```

@@ -8,16 +8,7 @@
  */
 
 const { rank } = require('./ranker');
-
-const DEFAULT_LAYER_PATHS = {
-  brain:    process.env.PLIAMEM_OMPA_VAULT    || `${process.env.HOME || ''}/.ompa/shared`,
-  kg:       process.env.PLIAMEM_KG_PATH        || `${process.env.HOME || ''}/.ompa/knowledge-graph.json`,
-  docs:     process.env.PLIAMEM_DOCS_DIR        || `${process.env.HOME || ''}/memory`,
-  logs:     process.env.PLIAMEM_LOGS_DIR        || `${process.env.HOME || ''}/memory`,
-  notices:  process.env.PLIAMEM_NOTICES_PATH   || `${process.env.HOME || ''}/vault/TEAM_NOTICES.md`,
-};
-
-const DEFAULT_WEIGHTS = { brain: 1.0, kg: 0.8, docs: 0.5, logs: 0.4, notices: 0.3 };
+const { DEFAULT_LAYER_PATHS, DEFAULT_WEIGHTS, LAYER_TYPE } = require('./defaults');
 
 function getAdapterClass(type) {
   switch (type) {
@@ -29,8 +20,6 @@ function getAdapterClass(type) {
     default:         return null;
   }
 }
-
-const LAYER_TYPE = { brain: 'ompa', kg: 'kg', docs: 'flat', logs: 'dailylog', notices: 'notices' };
 
 class Pliamem {
   constructor(config = {}) {
@@ -44,17 +33,19 @@ class Pliamem {
     if (this._initialized) return;
     this._initialized = true;
     const fs = require('fs');
-    for (const [name, path] of Object.entries(DEFAULT_LAYER_PATHS)) {
-      if (!path || !fs.existsSync(path)) continue;
+    for (const [name, layerPath] of Object.entries(DEFAULT_LAYER_PATHS)) {
+      if (!layerPath || !fs.existsSync(layerPath)) continue;
       const type = LAYER_TYPE[name];
       const AdapterClass = getAdapterClass(type);
       if (!AdapterClass) continue;
       try {
-        this._adapters[name] = new AdapterClass({ path });
+        this._adapters[name] = new AdapterClass({ path: layerPath });
         if (this.weights[name] === undefined) {
           this.weights[name] = DEFAULT_WEIGHTS[name] || 1.0;
         }
-      } catch (_) {}
+      } catch (e) {
+        console.warn(`[pliamem] failed to init adapter [${name}]: ${e.message}`);
+      }
     }
   }
 

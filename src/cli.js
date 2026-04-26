@@ -11,49 +11,32 @@
  */
 
 const { Pliamem } = require('./index');
-const path = require('path');
+const { DEFAULT_LAYER_PATHS, DEFAULT_WEIGHTS, LAYER_TYPE } = require('./defaults');
 
-// Default config — plug in your memory layer paths here
-const DEFAULT_LAYERS = {
-  brain: { type: 'ompa', path: process.env.PLIAMEM_OMPA_VAULT || path.join(process.env.HOME || '', '.ompa/shared') },
-  kg: { type: 'kg', path: process.env.PLIAMEM_KG_PATH || path.join(process.env.HOME || '', '.ompa/knowledge-graph.json') },
-  docs: { type: 'flat', path: process.env.PLIAMEM_DOCS_DIR || path.join(process.env.HOME || '', 'memory') },
-  logs: { type: 'dailylog', path: process.env.PLIAMEM_LOGS_DIR || path.join(process.env.HOME || '', 'memory') },
-  notices: { type: 'notices', path: process.env.PLIAMEM_NOTICES_PATH || path.join(process.env.HOME || '', 'vault/TEAM_NOTICES.md') },
-};
-
-const DEFAULT_WEIGHTS = { brain: 1.0, kg: 0.8, docs: 0.5, logs: 0.4, notices: 0.3 };
-
-// Build pliamem instance from env or defaults
+/**
+ * Build a Pliamem instance, registering only layers whose paths exist on disk.
+ */
 function buildPliamem() {
-  const layers = {};
-  for (const [name, cfg] of Object.entries(DEFAULT_LAYERS)) {
-    // Only include layers whose paths exist
-    const p = cfg.path || '';
-    if (!p) continue;
+  const fs = require('fs');
+  const pliamem = new Pliamem({ weights: { ...DEFAULT_WEIGHTS } });
+
+  for (const [name, layerPath] of Object.entries(DEFAULT_LAYER_PATHS)) {
+    if (!layerPath) continue;
     try {
-      const fs = require('fs');
-      const exists = fs.existsSync(p);
-      if (exists) layers[name] = cfg;
-    } catch (_) {}
+      if (!fs.existsSync(layerPath)) continue;
+      pliamem.setLayer(name, { type: LAYER_TYPE[name], path: layerPath });
+    } catch (e) {
+      console.warn(`[pliamem] skipping layer [${name}]: ${e.message}`);
+    }
   }
 
-  return new Pliamem({ layers, weights: DEFAULT_WEIGHTS });
+  return pliamem;
 }
 
 // ─── Commands ──────────────────────────────────────────────────────────────
 
 async function cmdSearch(query, opts) {
   const pliamem = buildPliamem();
-
-  // Initialize adapters
-  const { BaseAdapter } = require('./adapters/base');
-  for (const [name, cfg] of Object.entries(pliamem._adapters)) {
-    if (!pliamem._adapters[name]) {
-      const AdapterClass = require('./adapters/kg'); // placeholder
-    }
-  }
-
   const results = await pliamem.recall(query, opts);
 
   if (opts.json) {
@@ -155,7 +138,7 @@ const opts = {
   recent: flags.includes('--recent'),
   layer: flags.find(f => f.startsWith('--layer='))?.replace('--layer=', '') || null,
   top: parseInt(flags.find(f => f.startsWith('--top='))?.replace('--top=', '') || '0', 10),
-  limit: flags.find(f => f.startsWith('--limit='))?.replace('--limit=', '') || 5,
+  limit: parseInt(flags.find(f => f.startsWith('--limit='))?.replace('--limit=', '') || '5', 10),
 };
 
 (async () => {
@@ -165,13 +148,13 @@ const opts = {
       await cmdSearch(posArgs.join(' '), opts);
       break;
     case 'layers':
-      if (args[1] === 'status') await cmdLayersStatus();
-      else if (args[1] === 'list') await cmdLayersList();
+      if (posArgs[0] === 'status') await cmdLayersStatus();
+      else if (posArgs[0] === 'list') await cmdLayersList();
       else { await cmdHelp(); process.exit(1); }
       break;
     case 'config':
-      if (args[1] === 'get') await cmdConfigGet();
-      else if (args[1] === 'set') await cmdConfigSet(posArgs[0], posArgs[1]);
+      if (posArgs[0] === 'get') await cmdConfigGet();
+      else if (posArgs[0] === 'set') await cmdConfigSet(posArgs[1], posArgs[2]);
       else { await cmdHelp(); process.exit(1); }
       break;
     default:

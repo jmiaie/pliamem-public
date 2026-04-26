@@ -6,6 +6,16 @@
  *   status()            → Promise<{ ok, stats }>
  */
 
+/**
+ * @typedef {Object} SearchResult
+ * @property {string} layer    - Layer name (e.g. 'brain', 'kg', 'docs')
+ * @property {string} path     - Source path or URI for the result
+ * @property {number} score    - Relevance score (0–1)
+ * @property {string} excerpt  - Text excerpt (max 300 chars)
+ * @property {Object} metadata - Adapter-specific metadata
+ * @property {number} [finalScore] - Computed after ranking (score × weight × recency)
+ */
+
 class BaseAdapter {
   /**
    * @param {string} name - Layer identifier (e.g. 'brain', 'kg', 'docs')
@@ -15,7 +25,6 @@ class BaseAdapter {
     if (!name) throw new Error('Adapter must have a name');
     this.name = name;
     this.opts = opts;
-    this._weight = opts.weight !== undefined ? opts.weight : 1.0;
   }
 
   /**
@@ -23,13 +32,6 @@ class BaseAdapter {
    * @param {string} query - Search query
    * @param {object} opts - Search options { limit, recent, ... }
    * @returns {Promise<SearchResult[]>}
-   * @example
-   *   // Returns: [{
-   *   //   path:    'brain/memory-2026-03-25.md',
-   *   //   score:   0.91,
-   *   //   excerpt: 'ZTB Protocol v2.2 — routing hierarchy...',
-   *   //   metadata: { ... }
-   *   // }]
    */
   async search(query, opts = {}) {
     throw new Error(`Adapter [${this.name}] must implement search()`);
@@ -44,7 +46,10 @@ class BaseAdapter {
   }
 
   /**
-   * Normalize a result to the internal format.
+   * Normalize a result to the standard SearchResult format.
+   * @param {Partial<SearchResult>} result
+   * @param {Partial<SearchResult>} [defaults]
+   * @returns {SearchResult}
    * @protected
    */
   _normalize(result, defaults = {}) {

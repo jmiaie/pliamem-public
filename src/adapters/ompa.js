@@ -1,20 +1,19 @@
 /**
  * ompa.js — OMPA brain adapter for pliamem
  *
- * Searches an OMPA vault using semantic vector similarity.
- * Falls back to keyword if semantic search fails.
+ * Searches an OMPA vault using semantic vector similarity via a Python subprocess.
+ * Falls back to empty results if OMPA is unavailable.
  */
 
 const { spawn } = require('child_process');
+const os = require('os');
 const path = require('path');
 const { BaseAdapter } = require('./base');
 
-const PYTHON = '/home/ubuntu/.openclaw/bin/venv/bin/python3';
+const PYTHON = process.env.PLIAMEM_PYTHON || process.env.PYTHON_PATH || 'python3';
 
 const PY_SCRIPT = `
-import sys
-sys.path.insert(0, '/home/ubuntu/.openclaw/bin/venv/lib/python3.12/site-packages')
-import json as _json
+import sys, json as _json
 
 vault_path = sys.argv[1]
 query = sys.argv[2]
@@ -40,6 +39,9 @@ except Exception as e:
 print(_json.dumps(output))
 `.trim();
 
+const SCRIPT_PATH = path.join(os.tmpdir(), 'pliamem_ompa_search.py');
+const TIMEOUT_MS = 20000;
+
 class OmpaAdapter extends BaseAdapter {
   constructor(opts = {}) {
     super('brain', opts);
@@ -51,7 +53,7 @@ class OmpaAdapter extends BaseAdapter {
 
   _ensureScript() {
     if (this._scriptWritten) return;
-    require('fs').writeFileSync('/tmp/pliamem_ompa_search.py', PY_SCRIPT);
+    require('fs').writeFileSync(SCRIPT_PATH, PY_SCRIPT);
     this._scriptWritten = true;
   }
 
@@ -60,26 +62,45 @@ class OmpaAdapter extends BaseAdapter {
     const limit = opts.limit || this._limit;
 
     return new Promise((resolve) => {
-      const proc = spawn(PYTHON, ['/tmp/pliamem_ompa_search.py', this.vaultPath, query, String(limit)]);
+      let resolved = false;
+      const done = (value) => {
+        if (resolved) return;
+        resolved = true;
+        resolve(value);
+      };
+
+      const proc = spawn(PYTHON, [SCRIPT_PATH, this.vaultPath, query, String(limit)]);
       let out = '', err = '';
       proc.stdout.on('data', d => out += d.toString());
       proc.stderr.on('data', d => err += d.toString());
+
       proc.on('close', () => {
-        const trimd = out.trim();
-        if (trimd) {
+        const trimmed = out.trim();
+        if (trimmed) {
           try {
-            const parsed = JSON.parse(trimd);
+            const parsed = JSON.parse(trimmed);
             if (parsed.ok !== false && Array.isArray(parsed.hits)) {
-              return resolve(
-                parsed.hits.map(r => this._normalize(r, { metadata: { totalNotes: parsed.totalNotes } }))
+              return done(
+                parsed.hits.map(r => this._normalize(r, { metadata: { totalNotes: parsed.total_notes } }))
               );
             }
-          } catch (_) {}
+          } catch (e) {
+            console.warn(`[pliamem] ompa: failed to parse response: ${e.message}`);
+          }
         }
-        resolve([]);
+        done([]);
       });
-      proc.on('error', () => resolve([]));
-      setTimeout(() => { proc.kill(); resolve([]); }, 20000);
+
+      proc.on('error', (e) => {
+        console.warn(`[pliamem] ompa: subprocess failed: ${e.message}`);
+        done([]);
+      });
+
+      setTimeout(() => {
+        proc.kill();
+        console.warn(`[pliamem] ompa: search timed out after ${TIMEOUT_MS}ms`);
+        done([]);
+      }, TIMEOUT_MS);
     });
   }
 

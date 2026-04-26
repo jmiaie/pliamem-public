@@ -11,7 +11,7 @@ const { BaseAdapter } = require('./base');
 class DailyLogAdapter extends BaseAdapter {
   constructor(opts = {}) {
     super('logs', opts);
-    this.dir = opts.path || opts.dir || (process.env.PLIAMEM_HOME ? path.join(process.env.PLIAMEM_HOME, 'memory') : null);
+    this.dir = opts.path;
     this._limit = opts.limit || 5;
     this._recentDays = opts.recentDays || 3;
   }

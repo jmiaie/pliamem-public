@@ -2,7 +2,7 @@
  * kg.js — Knowledge Graph adapter for pliamem
  *
  * Searches structured JSON knowledge graphs for entity + relationship matches.
- * Scoring: name match (x3) > type match (x2) > content match (x1)
+ * Scoring: name match (×3) > type match (×2) > content match (×1)
  */
 
 const fs = require('fs');
@@ -11,7 +11,7 @@ const { BaseAdapter } = require('./base');
 class KgAdapter extends BaseAdapter {
   constructor(opts = {}) {
     super('kg', opts);
-    this.filePath = opts.path || opts.filePath;
+    this.filePath = opts.path;
     if (!this.filePath) throw new Error('KgAdapter requires opts.path (KG JSON file)');
     this._limit = opts.limit || 5;
     this._cache = null;
@@ -33,7 +33,7 @@ class KgAdapter extends BaseAdapter {
     const limit = opts.limit || this._limit;
     const kg = this._load();
 
-    const scored = (kg.entities || []).map(e => {
+    const entityResults = (kg.entities || []).map(e => {
       const nameMatch = (e.name || '').toLowerCase().includes(q);
       const contentMatch = (e.content || '').toLowerCase().includes(q);
       const typeMatch = (e.type || '').toLowerCase().includes(q);
@@ -43,15 +43,21 @@ class KgAdapter extends BaseAdapter {
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
 
-    const relMatches = (kg.relationships || [])
+    const relResults = (kg.relationships || [])
       .filter(r =>
         (r.subject || '').toLowerCase().includes(q) ||
         (r.predicate || '').toLowerCase().includes(q) ||
         (r.object || '').toLowerCase().includes(q)
       )
-      .slice(0, limit);
+      .slice(0, limit)
+      .map(r => this._normalize({
+        path: `kg://rel/${r.subject || 'unknown'}-${r.object || 'unknown'}`,
+        score: (r.subject || '').toLowerCase().includes(q) ? 0.7 : 0.4,
+        excerpt: `${r.subject} —[${r.predicate}]→ ${r.object}`,
+        metadata: { type: 'relationship' },
+      }));
 
-    const results = scored.map(({ e, score }) =>
+    const results = entityResults.map(({ e, score }) =>
       this._normalize({
         path: e.id ? `kg://${e.id}` : 'kg://entity',
         score,
@@ -60,7 +66,9 @@ class KgAdapter extends BaseAdapter {
       })
     );
 
-    return results;
+    return [...results, ...relResults]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
   }
 
   async status() {

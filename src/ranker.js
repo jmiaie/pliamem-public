@@ -3,43 +3,58 @@
  */
 
 /**
+ * @typedef {import('./adapters/base').SearchResult} SearchResult
+ */
+
+/**
  * Merge results from multiple adapters, apply weights, recency, and dedup.
  * @param {SearchResult[]} results - Flat array of results from all adapters
  * @param {object} weights - { layerName: weightFloat }
  * @param {object} opts - { recent: boolean }
+ * @returns {SearchResult[]} Ranked, deduplicated results
  */
 function rank(results, weights = {}, opts = {}) {
-  // Build recency map from date patterns in path/excerpt
+  const now = Date.now();
+
   const scored = results.map(r => {
     const baseWeight = weights[r.layer] !== undefined ? weights[r.layer] : 1.0;
-    const recency = calcRecency(r.path, r.excerpt);
+    const recency = calcRecency(r.path, r.excerpt, now);
     return {
       ...r,
       finalScore: r.score * baseWeight * recency,
     };
   });
 
-  // Deduplicate by content similarity (simple: same path OR same excerpt < 80% diff)
   const deduped = deduplicate(scored);
 
-  // Sort descending by finalScore
   return deduped.sort((a, b) => b.finalScore - a.finalScore);
 }
 
+const DATE_PATTERN = /(\d{4}-\d{2}-\d{2})/;
+
 /**
- * Calculate recency factor (1.0 for recent, decaying for older).
- * Currently uses date pattern matching in path.
+ * Calculate recency factor based on date found in path or excerpt.
+ * Returns 1.0 for today, decaying toward 0.3 over ~30 days.
+ * @param {string} filePath
+ * @param {string} excerpt
+ * @param {number} now - Current timestamp (ms)
+ * @returns {number} Recency factor between 0.3 and 1.0
  */
-function calcRecency(path, excerpt) {
-  const text = (path + ' ' + excerpt).toLowerCase();
+function calcRecency(filePath, excerpt, now) {
+  const text = (filePath || '') + ' ' + (excerpt || '');
+  const match = text.match(DATE_PATTERN);
+  if (!match) return 0.3;
 
-  // Recent = this week
-  if (text.includes('2026-04-2') || text.includes('2026-04-1')) return 1.0;
-  if (text.includes('2026-03-3')) return 0.9;
-  if (text.includes('2026-03-2')) return 0.7;
-  if (text.includes('2026-03-1')) return 0.5;
+  const entryDate = new Date(match[1]).getTime();
+  if (isNaN(entryDate)) return 0.3;
 
-  return 0.3; // older
+  const daysSince = (now - entryDate) / (1000 * 60 * 60 * 24);
+
+  if (daysSince <= 3) return 1.0;
+  if (daysSince <= 7) return 0.9;
+  if (daysSince <= 14) return 0.7;
+  if (daysSince <= 30) return 0.5;
+  return 0.3;
 }
 
 /**
@@ -60,11 +75,11 @@ function deduplicate(results) {
 }
 
 /**
- * Build a canonical key for deduping (layer + path basename).
+ * Build a canonical key for deduping (layer + path basename + excerpt prefix).
  */
 function canonicalKey(r) {
-  const basename = r.path.split('/').pop().split('\\').pop();
-  return `${r.layer}::${basename}::${r.excerpt.slice(0, 60)}`;
+  const basename = (r.path || '').split('/').pop().split('\\').pop();
+  return `${r.layer}::${basename}::${(r.excerpt || '').slice(0, 60)}`;
 }
 
 module.exports = { rank };

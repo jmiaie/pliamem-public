@@ -1,36 +1,30 @@
 {
-  ...,
-  adapters: {
-    ompa: {
-      type: 'ompa',
-      path: '/home/ubuntu/.ompa/shared',
-      weight: 1.0
+  "adapters": {
+    "ompa": {
+      "type": "ompa",
+      "weight": 1.0
     },
-    kg: {
-      type: 'kg',
-      path: '/home/ubuntu/.ompa/knowledge-graph.json',
-      weight: 0.8
+    "kg": {
+      "type": "kg",
+      "weight": 0.8
     },
-    docs: {
-      type: 'flat',
-      path: '/home/ubuntu/memory',
-      pattern: '*.md',
-      maxDepth: 3,
-      weight: 0.5
+    "docs": {
+      "type": "flat",
+      "pattern": "*.md",
+      "maxDepth": 3,
+      "weight": 0.5
     },
-    logs: {
-      type: 'dailylog',
-      path: '/home/ubuntu/memory',
-      weight: 0.4
+    "logs": {
+      "type": "dailylog",
+      "weight": 0.4
     },
-    notices: {
-      type: 'notices',
-      path: '/home/ubuntu/vault/TEAM_NOTICES.md',
-      weight: 0.3
+    "notices": {
+      "type": "notices",
+      "weight": 0.3
     }
   },
-  ranker: {
-    recencyDecay: true,
-    dedup: true
+  "ranker": {
+    "recencyDecay": true,
+    "dedup": true
   }
 }

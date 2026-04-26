@@ -10,7 +10,7 @@ const { BaseAdapter } = require('./base');
 class NoticesAdapter extends BaseAdapter {
   constructor(opts = {}) {
     super('notices', opts);
-    this.filePath = opts.path || opts.filePath;
+    this.filePath = opts.path;
     if (!this.filePath) throw new Error('NoticesAdapter requires opts.path');
     this._limit = opts.limit || 5;
   }
