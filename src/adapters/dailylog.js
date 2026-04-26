@@ -12,6 +12,7 @@ class DailyLogAdapter extends BaseAdapter {
   constructor(opts = {}) {
     super('logs', opts);
     this.dir = opts.path;
+    if (!this.dir) throw new Error('DailyLogAdapter requires opts.path (directory)');
     this._limit = opts.limit || 5;
     this._recentDays = opts.recentDays || 3;
   }
@@ -21,7 +22,6 @@ class DailyLogAdapter extends BaseAdapter {
     const limit = opts.limit || this._limit;
     const recentDays = opts.recent ? (opts.recentDays || this._recentDays) : Infinity;
 
-    if (!this.dir) return [];
     if (!fs.existsSync(this.dir)) return [];
 
     let files = fs.readdirSync(this.dir)
@@ -62,7 +62,7 @@ class DailyLogAdapter extends BaseAdapter {
   }
 
   async status() {
-    if (!this.dir || !fs.existsSync(this.dir)) {
+    if (!fs.existsSync(this.dir)) {
       return { ok: false, stats: { error: 'directory not found' } };
     }
     let count = 0;

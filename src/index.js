@@ -8,7 +8,8 @@
  */
 
 const { rank } = require('./ranker');
-const { DEFAULT_LAYER_PATHS, DEFAULT_WEIGHTS, LAYER_TYPE } = require('./defaults');
+const { loadConfig } = require('./config');
+const { DEFAULT_LAYER_PATHS, LAYER_TYPE } = require('./defaults');
 
 function getAdapterClass(type) {
   switch (type) {
@@ -23,7 +24,8 @@ function getAdapterClass(type) {
 
 class Pliamem {
   constructor(config = {}) {
-    this.weights = config.weights || {};
+    const resolved = loadConfig(config);
+    this.weights = resolved.weights;
     this.opts = config.opts || {};
     this._adapters = {};
     this._initialized = false;
@@ -40,9 +42,6 @@ class Pliamem {
       if (!AdapterClass) continue;
       try {
         this._adapters[name] = new AdapterClass({ path: layerPath });
-        if (this.weights[name] === undefined) {
-          this.weights[name] = DEFAULT_WEIGHTS[name] || 1.0;
-        }
       } catch (e) {
         console.warn(`[pliamem] failed to init adapter [${name}]: ${e.message}`);
       }

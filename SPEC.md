@@ -195,6 +195,7 @@ pliamem/
 │   ├── index.js              # Main entry — Pliamem class
 │   ├── cli.js                # CLI entry point
 │   ├── ranker.js             # Ranking + merge engine
+│   ├── config.js             # Config loader (project + user + overrides)
 │   ├── defaults.js           # Shared constants (paths, weights, types)
 │   └── adapters/
 │       ├── base.js           # Adapter interface + SearchResult typedef
@@ -203,6 +204,11 @@ pliamem/
 │       ├── flat.js           # Flat file adapter
 │       ├── dailylog.js       # Daily log adapter
 │       └── notices.js        # Team notices adapter
+├── tests/
+│   ├── ranker.test.js        # Ranking, dedup, recency, --top
+│   ├── adapters.test.js      # All adapter implementations
+│   ├── config.test.js        # Config loader
+│   └── integration.test.js   # Full pipeline (Pliamem class)
 ├── docs/
 │   └── adapter-guide.md      # How to write custom adapters
 └── config/

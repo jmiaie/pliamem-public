@@ -6,11 +6,29 @@
   "bin": {
     "pliamem": "src/cli.js"
   },
+  "files": [
+    "src/",
+    "config/",
+    "docs/",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "test": "node --test tests/*.test.js",
     "search": "node src/cli.js search",
     "status": "node src/cli.js layers status"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jmiaie/pliamem.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jmiaie/pliamem/issues"
+  },
+  "homepage": "https://github.com/jmiaie/pliamem#readme",
   "keywords": [
     "ai",
     "memory",
@@ -18,7 +36,8 @@
     "recall",
     "unified-search",
     "knowledge-graph",
-    "vector-memory"
+    "vector-memory",
+    "pliable-memory"
   ],
   "author": "Jeffrey Milam / Micap AI LLC",
   "license": "SEE LICENSE IN LICENSE"

@@ -26,8 +26,9 @@ function rank(results, weights = {}, opts = {}) {
   });
 
   const deduped = deduplicate(scored);
+  const sorted = deduped.sort((a, b) => b.finalScore - a.finalScore);
 
-  return deduped.sort((a, b) => b.finalScore - a.finalScore);
+  return opts.top > 0 ? sorted.slice(0, opts.top) : sorted;
 }
 
 const DATE_PATTERN = /(\d{4}-\d{2}-\d{2})/;
