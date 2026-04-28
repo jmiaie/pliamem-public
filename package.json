@@ -40,5 +40,8 @@
     "pliable-memory"
   ],
   "author": "Jeffrey Milam / Micap AI LLC",
-  "license": "SEE LICENSE IN LICENSE"
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "@heyputer/puter.js": "^2.2.15"
+  }
 }
