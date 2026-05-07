@@ -40,6 +40,28 @@ print(_json.dumps(output))
 `.trim();
 
 const SCRIPT_PATH = path.join(os.tmpdir(), 'pliamem_ompa_search.py');
+
+const PY_INGEST_SCRIPT = `
+import sys, json as _json, os
+vault_path = sys.argv[1]
+data_path = sys.argv[2]
+content = sys.argv[3]
+try:
+    from ompa import Ompa
+    om = Ompa(vault_path)
+    om.session_start()
+    full_path = os.path.join(vault_path, os.path.basename(data_path))
+    with open(full_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    if hasattr(om, 'index'): om.index(full_path)
+    elif hasattr(om, 'ingest'): om.ingest(full_path)
+    om.stop()
+    print(_json.dumps({'ok': True, 'path': full_path}))
+except Exception as e:
+    print(_json.dumps({'ok': False, 'error': str(e)}))
+`.trim();
+
+const INGEST_SCRIPT_PATH = path.join(os.tmpdir(), 'pliamem_ompa_ingest.py');
 const TIMEOUT_MS = 20000;
 
 class OmpaAdapter extends BaseAdapter {
@@ -54,6 +76,7 @@ class OmpaAdapter extends BaseAdapter {
   _ensureScript() {
     if (this._scriptWritten) return;
     require('fs').writeFileSync(SCRIPT_PATH, PY_SCRIPT);
+    require('fs').writeFileSync(INGEST_SCRIPT_PATH, PY_INGEST_SCRIPT);
     this._scriptWritten = true;
   }
 
@@ -101,6 +124,42 @@ class OmpaAdapter extends BaseAdapter {
         console.warn(`[pliamem] ompa: search timed out after ${TIMEOUT_MS}ms`);
         done([]);
       }, TIMEOUT_MS);
+    });
+  }
+
+  async ingest(data) {
+    if (!data.path || !data.content) {
+      return { handled: false, reason: 'Missing path or content' };
+    }
+    this._ensureScript();
+
+    return new Promise((resolve) => {
+      let resolved = false;
+      const done = (value) => {
+        if (resolved) return;
+        resolved = true;
+        resolve(value);
+      };
+
+      const proc = spawn(PYTHON, [INGEST_SCRIPT_PATH, this.vaultPath, data.path, data.content]);
+      let out = '';
+      proc.stdout.on('data', d => out += d.toString());
+      
+      proc.on('close', () => {
+        const trimmed = out.trim();
+        if (trimmed) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (parsed.ok) return done({ handled: true, details: { path: parsed.path } });
+            else return done({ handled: false, error: parsed.error });
+          } catch (e) {
+             return done({ handled: false, error: 'JSON parse error: ' + e.message });
+          }
+        }
+        done({ handled: false, reason: 'No output from python' });
+      });
+      
+      proc.on('error', (e) => done({ handled: false, error: e.message }));
     });
   }
 

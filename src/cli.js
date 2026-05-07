@@ -8,6 +8,8 @@
  *   node src/cli.js layers list
  *   node src/cli.js config get
  *   node src/cli.js config set <key> <value>
+ *   node src/cli.js serve [--port=3000] [--host=127.0.0.1]
+ *   node src/cli.js init
  */
 
 const { Pliamem } = require('./index');
@@ -98,6 +100,34 @@ async function cmdConfigSet(key, value) {
   }
 }
 
+async function cmdServe(port = 3000, host = '127.0.0.1') {
+  const pliamem = buildPliamem();
+  const { startServer } = require('./server');
+  startServer(pliamem, port, host);
+}
+
+async function cmdInit() {
+  const fs = require('fs');
+  const path = require('path');
+  const os = require('os');
+  
+  const memoryDir = process.env.PLIAMEM_DOCS_DIR || path.join(os.homedir(), 'memory');
+  if (!fs.existsSync(memoryDir)) {
+    fs.mkdirSync(memoryDir, { recursive: true });
+    console.log(`📁 Created default memory directory: ${memoryDir}`);
+  } else {
+    console.log(`📁 Memory directory already exists: ${memoryDir}`);
+  }
+  
+  const defaultFile = path.join(memoryDir, 'README.md');
+  if (!fs.existsSync(defaultFile)) {
+    fs.writeFileSync(defaultFile, '# Pliamem Memory\n\nThis is your default memory directory. Add markdown files here to be indexed by the flat file adapter.');
+    console.log(`📄 Created default memory file: ${defaultFile}`);
+  }
+  
+  console.log(`✅ Initialization complete.`);
+}
+
 async function cmdHelp() {
   console.log(`pliamem — Unified Memory Recall
 
@@ -110,6 +140,8 @@ Usage:
   pliamem layers list                 Show configured layers
   pliamem config get                  Show config
   pliamem config set <layer.weight> <value>  Set weight
+  pliamem serve [--port=3000] [--host=127.0.0.1]  Start REST API server
+  pliamem init                        Create default memory directory
   pliamem help                        Show this message
 
 Environment variables:
@@ -156,6 +188,14 @@ const opts = {
       if (posArgs[0] === 'get') await cmdConfigGet();
       else if (posArgs[0] === 'set') await cmdConfigSet(posArgs[1], posArgs[2]);
       else { await cmdHelp(); process.exit(1); }
+      break;
+    case 'serve':
+      const port = parseInt(flags.find(f => f.startsWith('--port='))?.replace('--port=', '') || '3000', 10);
+      const host = flags.find(f => f.startsWith('--host='))?.replace('--host=', '') || '127.0.0.1';
+      await cmdServe(port, host);
+      break;
+    case 'init':
+      await cmdInit();
       break;
     default:
       await cmdHelp();

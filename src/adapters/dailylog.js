@@ -61,6 +61,22 @@ class DailyLogAdapter extends BaseAdapter {
       .slice(0, limit);
   }
 
+  async ingest(data) {
+    if (!data.content) return { handled: false, reason: 'Missing content in ingest data' };
+    try {
+      if (!fs.existsSync(this.dir)) fs.mkdirSync(this.dir, { recursive: true });
+      const today = new Date().toISOString().split('T')[0];
+      const fullPath = path.join(this.dir, `${today}.md`);
+      // Add a timestamp to the log entry
+      const time = new Date().toISOString().split('T')[1].slice(0, 5);
+      const entry = `\n\n### [${time}]\n${data.content}\n`;
+      fs.appendFileSync(fullPath, entry, 'utf8');
+      return { handled: true, details: { path: fullPath, appendedBytes: Buffer.byteLength(entry) } };
+    } catch (e) {
+      return { handled: false, error: e.message };
+    }
+  }
+
   async status() {
     if (!fs.existsSync(this.dir)) {
       return { ok: false, stats: { error: 'directory not found' } };

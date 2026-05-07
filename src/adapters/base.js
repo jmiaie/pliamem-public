@@ -46,6 +46,15 @@ class BaseAdapter {
   }
 
   /**
+   * Ingest data into this memory layer (if supported).
+   * @param {object} data - Data to ingest
+   * @returns {Promise<{ handled: boolean, details?: any }>}
+   */
+  async ingest(data) {
+    return { handled: false, reason: 'Not implemented' };
+  }
+
+  /**
    * Normalize a result to the standard SearchResult format.
    * @param {Partial<SearchResult>} result
    * @param {Partial<SearchResult>} [defaults]

@@ -63,6 +63,20 @@ class FlatFileAdapter extends BaseAdapter {
     return results.sort((a, b) => b.score - a.score).slice(0, limit);
   }
 
+  async ingest(data) {
+    if (!data.path || !data.content) {
+      return { handled: false, reason: 'Missing path or content in ingest data' };
+    }
+    const safePath = path.basename(data.path); // prevent directory traversal
+    const fullPath = path.join(this.dir, safePath);
+    try {
+      fs.writeFileSync(fullPath, data.content, 'utf8');
+      return { handled: true, details: { path: fullPath, bytes: Buffer.byteLength(data.content) } };
+    } catch (e) {
+      return { handled: false, error: e.message };
+    }
+  }
+
   async status() {
     let count = 0;
     this._walk(() => { count++; });

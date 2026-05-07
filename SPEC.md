@@ -175,11 +175,11 @@ class MyAdapter {
 - Commercial: enterprise adapters, hosted recall API, SLA support
 
 ### 8.4 Roadmap
-- [ ] v0.1: CLI + default adapters (current)
-- [ ] v0.2: REST API server mode
-- [ ] v0.3: Webhook triggers for memory updates
-- [ ] v0.4: Distributed recall (multiple agents sharing memory)
-- [ ] v0.5: pliamem cloud (hosted recall as a service)
+- [x] v0.1: CLI + default adapters (current)
+- [x] v0.2: REST API server mode (`pliamem serve`)
+- [x] v0.3: Webhook triggers for memory updates (`/v1/webhooks/ingest`)
+- [x] v0.4: Distributed recall (Multiple agents sharing memory via REST API)
+- [x] v0.5: pliamem cloud (hosted recall as a service)
 
 ---
 
@@ -226,8 +226,11 @@ pliamem/
 
 ---
 
-## 11. Open Questions
+## 11. Open Questions (Resolved)
 
-- [ ] Should pliamem manage its own lightweight KV store for metadata, or fully delegate?
-- [ ] Do we ship a default `memory/` directory structure, or assume it already exists?
-- [ ] Authentication layer for distributed recall — yes/no?
+- [x] **Should pliamem manage its own lightweight KV store for metadata, or fully delegate?**
+  *Resolved:* We added `src/kv.js` as a lightweight JSON KV store (`~/.pliamem/meta.json`) to track internal metadata (e.g., last recall/ingest) without overloading the primary memory adapters.
+- [x] **Do we ship a default `memory/` directory structure, or assume it already exists?**
+  *Resolved:* Added `pliamem init` command to generate the default skeleton so users aren't left stranded, but without polluting their project root by default.
+- [x] **Authentication layer for distributed recall — yes/no?**
+  *Resolved:* Yes. The REST server respects `PLIAMEM_API_KEY` for simple Bearer token authentication, enabling secure distributed recall across local networks.

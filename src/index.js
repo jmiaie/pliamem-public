@@ -10,6 +10,9 @@
 const { rank } = require('./ranker');
 const { loadConfig } = require('./config');
 const { DEFAULT_LAYER_PATHS, LAYER_TYPE } = require('./defaults');
+const { KVStore } = require('./kv');
+const os = require('os');
+const path = require('path');
 
 function getAdapterClass(type) {
   switch (type) {
@@ -18,6 +21,7 @@ function getAdapterClass(type) {
     case 'flat':     return require('./adapters/flat').FlatFileAdapter;
     case 'dailylog': return require('./adapters/dailylog').DailyLogAdapter;
     case 'notices':  return require('./adapters/notices').NoticesAdapter;
+    case 'remote':   return require('./adapters/remote').RemoteAdapter;
     default:         return null;
   }
 }
@@ -29,6 +33,9 @@ class Pliamem {
     this.opts = config.opts || {};
     this._adapters = {};
     this._initialized = false;
+    
+    const kvPath = path.join(os.homedir(), '.pliamem', 'meta.json');
+    this.meta = new KVStore(kvPath);
   }
 
   _autoInit() {
@@ -76,7 +83,28 @@ class Pliamem {
         console.error(`[pliamem] adapter [${name}] error: ${e.message}`);
       }
     }));
+    // track last recall in metadata
+    this.meta.set('lastRecall', Date.now());
     return rank(raw, this.weights, opts);
+  }
+
+  async ingest(data) {
+    this._autoInit();
+    const results = {};
+    await Promise.all(Object.entries(this._adapters).map(async ([name, adapter]) => {
+      try {
+        if (typeof adapter.ingest === 'function') {
+          results[name] = await adapter.ingest(data);
+        } else {
+          results[name] = { handled: false, reason: 'adapter does not support ingest' };
+        }
+      } catch (e) {
+        results[name] = { handled: false, error: e.message };
+      }
+    }));
+    // track last ingested time in metadata
+    this.meta.set('lastIngest', Date.now());
+    return results;
   }
 
   async status() {

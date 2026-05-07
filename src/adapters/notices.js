@@ -36,6 +36,21 @@ class NoticesAdapter extends BaseAdapter {
     });
   }
 
+  async ingest(data) {
+    if (!data.content) return { handled: false, reason: 'Missing content' };
+    const headerTitle = data.header || 'Notice Update';
+    const dateStr = new Date().toISOString().split('T')[0];
+    const block = `\n\n## ${dateStr} — ${headerTitle}\n\n${data.content}\n`;
+    try {
+      const dir = require('path').dirname(this.filePath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.appendFileSync(this.filePath, block, 'utf8');
+      return { handled: true, details: { path: this.filePath, appendedBytes: Buffer.byteLength(block) } };
+    } catch (e) {
+      return { handled: false, error: e.message };
+    }
+  }
+
   async status() {
     if (!this.filePath || !fs.existsSync(this.filePath)) {
       return { ok: false, stats: { error: 'file not found' } };
