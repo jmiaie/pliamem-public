@@ -22,6 +22,7 @@ function getAdapterClass(type) {
     case 'dailylog': return require('./adapters/dailylog').DailyLogAdapter;
     case 'notices':  return require('./adapters/notices').NoticesAdapter;
     case 'remote':   return require('./adapters/remote').RemoteAdapter;
+    case 'puter':    return require('./adapters/puter').PuterAdapter;
     default:         return null;
   }
 }
@@ -43,10 +44,13 @@ class Pliamem {
     this._initialized = true;
     const fs = require('fs');
     for (const [name, layerPath] of Object.entries(DEFAULT_LAYER_PATHS)) {
-      if (!layerPath || !fs.existsSync(layerPath)) continue;
+      if (!layerPath) continue;
       const type = LAYER_TYPE[name];
       const AdapterClass = getAdapterClass(type);
       if (!AdapterClass) continue;
+      // puter adapter activates via token presence, not a file path
+      const isTokenBased = type === 'puter';
+      if (!isTokenBased && !fs.existsSync(layerPath)) continue;
       try {
         this._adapters[name] = new AdapterClass({ path: layerPath });
       } catch (e) {
@@ -105,6 +109,12 @@ class Pliamem {
     // track last ingested time in metadata
     this.meta.set('lastIngest', Date.now());
     return results;
+  }
+
+  async ask(query, opts = {}) {
+    const { ask: aiAsk } = require('./ai');
+    const results = await this.recall(query, { ...opts, limit: opts.limit || 6 });
+    return aiAsk(query, results);
   }
 
   async status() {

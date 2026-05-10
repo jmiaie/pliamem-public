@@ -48,6 +48,21 @@ function startServer(pliamem, port = 3000, host = '127.0.0.1') {
         return sendJson(200, { query, results });
       }
 
+      if (req.method === 'GET' && pathname === '/v1/ask') {
+        const query = parsedUrl.query.query;
+        if (!query) return sendJson(400, { error: 'Missing query parameter' });
+
+        try {
+          const result = await pliamem.ask(query);
+          return sendJson(200, { query, ...result });
+        } catch (e) {
+          if (e.message.includes('PUTER_AUTH_TOKEN')) {
+            return sendJson(503, { error: 'AI features unavailable: PUTER_AUTH_TOKEN not set on server' });
+          }
+          throw e;
+        }
+      }
+
       if (req.method === 'GET' && pathname === '/v1/status') {
         const status = await pliamem.status();
         return sendJson(200, { status });

@@ -128,6 +128,32 @@ async function cmdInit() {
   console.log(`✅ Initialization complete.`);
 }
 
+async function cmdAsk(query, opts) {
+  const pliamem = buildPliamem();
+  const sep = '─'.repeat(60);
+  console.log(`\n🧠 pliamem ask: "${query}"\n${sep}`);
+
+  try {
+    const { answer, sources } = await pliamem.ask(query, opts);
+    console.log(`\n${answer}\n`);
+    if (sources.length) {
+      console.log('Sources:');
+      sources.forEach(s =>
+        console.log(`  [${s.ref}] ${s.layer} — ${s.path} (score: ${s.score?.toFixed(2) ?? '?'})`)
+      );
+    }
+  } catch (e) {
+    if (e.message.includes('PUTER_AUTH_TOKEN')) {
+      console.error('❌ Set PUTER_AUTH_TOKEN env var to use AI features.');
+    } else {
+      console.error(`❌ ${e.message}`);
+    }
+    process.exit(1);
+  }
+
+  console.log(sep);
+}
+
 async function cmdHelp() {
   console.log(`pliamem — Unified Memory Recall
 
@@ -136,6 +162,7 @@ Usage:
   pliamem search "<query>" --layer=brain  Search one layer
   pliamem search "<query>" --json     Machine-readable output
   pliamem search "<query>" --recent    Recent entries only (last 3 days)
+  pliamem ask "<question>"            AI-synthesized answer from memory (requires PUTER_AUTH_TOKEN)
   pliamem layers status               Check all adapters
   pliamem layers list                 Show configured layers
   pliamem config get                  Show config
@@ -150,6 +177,7 @@ Environment variables:
   PLIAMEM_DOCS_DIR     - Directory of markdown docs
   PLIAMEM_LOGS_DIR     - Directory of daily logs
   PLIAMEM_NOTICES_PATH - Path to team notices file
+  PUTER_AUTH_TOKEN     - Puter auth token (required for pliamem ask)
 
 Examples:
   pliamem search "ZTB Protocol"
@@ -178,6 +206,10 @@ const opts = {
     case 'search':
       if (!posArgs[0]) { await cmdHelp(); process.exit(1); }
       await cmdSearch(posArgs.join(' '), opts);
+      break;
+    case 'ask':
+      if (!posArgs[0]) { await cmdHelp(); process.exit(1); }
+      await cmdAsk(posArgs.join(' '), opts);
       break;
     case 'layers':
       if (posArgs[0] === 'status') await cmdLayersStatus();
