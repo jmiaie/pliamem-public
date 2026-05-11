@@ -18,7 +18,7 @@ As AI agents and LLM swarms become more complex, **memory fragmentation** become
 
 It is designed with a clean **Adapter Pattern**, allowing seamless integration with local file systems, Python-based vector stores, and cloud Key-Value infrastructure.
 
-### 🌟 Why Engineering Teams & Recruiters Should Care
+### 🌟 Key Technical Features
 - **Scalable Architecture:** Built in modular Node.js, utilizing the Adapter design pattern for limitless extensibility and separation of concerns.
 - **RESTful API & Webhooks:** Includes a built-in server for distributed agent recall across local networks.
 - **AI Synthesis Integration:** Native integration with `@heyputer/puter.js` for instant, AI-synthesized answers derived directly from your memory context.
