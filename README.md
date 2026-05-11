@@ -9,7 +9,7 @@ pliamem (pronounced "PLY-ah-mem") is a **pliable memory** — a unified recall l
 ## Install
 
 ```bash
-git clone https://github.com/jmiaie/pliamem.git
+git clone https://github.com/jmiaie/pliamem-public.git pliamem
 cd pliamem
 ```
 
