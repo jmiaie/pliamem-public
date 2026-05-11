@@ -1,123 +1,134 @@
-# pliamem
-
-**"Your AI's memory, unified."**
-
-pliamem (pronounced "PLY-ah-mem") is a **pliable memory** — a unified recall layer for AI agents. One query searches your entire memory stack: vector brains, knowledge graphs, daily logs, flat files, and team notices — then returns ranked, deduplicated results.
+<div align="center">
+  <h1>🧩 Pliamem</h1>
+  <p><b>Your AI's memory, unified. A pliable memory microservice for AI swarms and agents.</b></p>
+  
+  [![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)](https://github.com/jmiaie/pliamem-public)
+  [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+  [![License](https://img.shields.io/badge/license-Copyright-red.svg)](#license)
+  [![Micap AI](https://img.shields.io/badge/built%20by-Micap%20AI-purple.svg)](https://github.com/jmiaie)
+</div>
 
 ---
 
-## Install
+## 📖 About Pliamem
 
+As AI agents and LLM swarms become more complex, **memory fragmentation** becomes a critical bottleneck. Agents need context from various disconnected sources—vector brains, knowledge graphs, team documentation, and cloud databases.
+
+**Pliamem** (pronounced *"PLY-ah-mem"*) solves this. It acts as a central **memory routing microservice**. A single query searches your entire memory stack, ranks the results using a sophisticated recency and relevance scoring algorithm, and returns deduplicated context perfectly formatted for LLM context windows. 
+
+It is designed with a clean **Adapter Pattern**, allowing seamless integration with local file systems, Python-based vector stores, and cloud Key-Value infrastructure.
+
+### 🌟 Why Engineering Teams & Recruiters Should Care
+- **Scalable Architecture:** Built in modular Node.js, utilizing the Adapter design pattern for limitless extensibility and separation of concerns.
+- **RESTful API & Webhooks:** Includes a built-in server for distributed agent recall across local networks.
+- **AI Synthesis Integration:** Native integration with `@heyputer/puter.js` for instant, AI-synthesized answers derived directly from your memory context.
+- **Zero-Dependency Core:** The base engine runs entirely without `npm install` requirements, ensuring lightweight deployments.
+
+---
+
+## 🇺🇸 Quick Start (English)
+
+### Installation
 ```bash
 git clone https://github.com/jmiaie/pliamem-public.git pliamem
 cd pliamem
 ```
 
-No `npm install` required — zero dependencies by default. OMPA adapter requires Python 3.8+ with `ompa` installed (`pip install ompa`).
-
-## Quick Start
-
+### Usage
 ```bash
-# Zero-config (reads PLIAMEM_* environment variables)
+# Ask the AI to synthesize an answer from your memory (requires PUTER_AUTH_TOKEN)
+node src/cli.js ask "What is the ZTB Protocol?"
+
+# Search across all memory layers
 node src/cli.js search "ZTB Protocol"
 
-# Search one layer
+# Search a specific layer (e.g., your vector brain or cloud KV)
 node src/cli.js search "Tai" --layer=brain
 
-# Machine-readable output
-node src/cli.js search "resource-lens" --json
-
-# Recent entries only
-node src/cli.js search "model routing" --recent
-
-# Health check all adapters
-node src/cli.js layers status
+# Start the REST API server for remote agent access
+node src/server.js
 ```
 
-## Live Demo
+---
 
-```
-$ node src/cli.js search "ZTB Protocol"
+## 🇪🇸 Inicio Rápido (Español)
 
-🔍 pliamem recall: "ZTB Protocol"
-────────────────────────────────────────────────────────────
-
-[1] brain (score: 0.700)
-  brain/ztb-protocol.md
-  ZTB Protocol v2.2...
-
-[2] kg (score: 0.168)
-  kg://memory-2026-03-25-0
-  Event: 2026-03-25 — Ingested ZTB Protocol 2.0...
-
-[3] docs (score: 0.158)
-  vault/ZTB_AUDIT.md
-  # ZTB Protocol Audit Report...
-
-────────────────────────────────────────────────────────────
-  12 results from 4 layers
+### Instalación
+```bash
+git clone https://github.com/jmiaie/pliamem-public.git pliamem
+cd pliamem
 ```
 
-## Environment Variables
+### Uso
+```bash
+# Pide a la IA que sintetice una respuesta desde tu memoria (requiere PUTER_AUTH_TOKEN)
+node src/cli.js ask "¿Qué es el Protocolo ZTB?"
 
-pliamem auto-initializes from these environment variables:
+# Buscar en todas las capas de memoria
+node src/cli.js search "ZTB Protocol"
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PLIAMEM_OMPA_VAULT` | Path to OMPA shared brain vault | `~/.ompa/shared` |
-| `PLIAMEM_KG_PATH` | Path to knowledge graph JSON | `~/.ompa/knowledge-graph.json` |
-| `PLIAMEM_DOCS_DIR` | Directory of markdown docs | `~/memory` |
-| `PLIAMEM_LOGS_DIR` | Directory of daily logs | `~/memory` |
-| `PLIAMEM_NOTICES_PATH` | Path to team notices file | `~/vault/TEAM_NOTICES.md` |
+# Buscar en una capa específica (ej. tu cerebro de vectores)
+node src/cli.js search "Tai" --layer=brain
 
-## Default Memory Layers
+# Iniciar el servidor API REST para acceso remoto
+node src/server.js
+```
+
+---
+
+## 🇫🇷 Démarrage Rapide (Français)
+
+### Installation
+```bash
+git clone https://github.com/jmiaie/pliamem-public.git pliamem
+cd pliamem
+```
+
+### Utilisation
+```bash
+# Demandez à l'IA de synthétiser une réponse à partir de votre mémoire (nécessite PUTER_AUTH_TOKEN)
+node src/cli.js ask "Qu'est-ce que le protocole ZTB ?"
+
+# Rechercher dans toutes les couches de mémoire
+node src/cli.js search "ZTB Protocol"
+
+# Rechercher dans une couche spécifique (ex. votre cerveau vectoriel)
+node src/cli.js search "Tai" --layer=brain
+
+# Démarrer le serveur API REST pour l'accès distant
+node src/server.js
+```
+
+---
+
+## 🏗️ Architecture & Layers
+
+Pliamem auto-initializes via environment variables and supports the following layers natively:
 
 | Layer | Type | Description |
 |-------|------|-------------|
-| `brain` | OMPA adapter | Semantic vector search on OMPA brain vault |
-| `kg` | KG adapter | Structured entity + relationship lookup |
-| `docs` | Flat file adapter | Markdown files with section scoring |
-| `logs` | Daily log adapter | Chronological `YYYY-MM-DD.md` session logs |
-| `notices` | Notices adapter | Versioned team notice blocks |
+| `brain` | **OMPA Adapter** | Semantic vector search on Python-based OMPA brains |
+| `kg` | **KG Adapter** | Structured entity + relationship JSON lookup |
+| `docs` | **Flat File** | Markdown files with section and header scoring |
+| `logs` | **Daily Log** | Chronological session logs with recency weight |
+| `cloud` | **Puter Adapter**| Cloud Key-Value storage via `puter.js` |
 
-## As a Library
+## 🔌 API & Integration
+
+Pliamem can be imported as a robust library into any Node.js AI project:
 
 ```javascript
 const { Pliamem } = require('./src');
 
-const pliamem = new Pliamem();  // auto-initializes from env
+// Auto-initializes adapters from environment variables
+const pliamem = new Pliamem();  
 
-const results = await pliamem.recall('ZTB Protocol');
-results.forEach(r => {
-  console.log(`[${r.layer}] score: ${r.finalScore?.toFixed(2)}`);
-  console.log(`  ${r.excerpt?.slice(0, 120)}`);
-});
-
-// Or with explicit config:
-const pliamem = new Pliamem({
-  layers: {
-    brain: new OmpaAdapter({ path: './brain' }),
-    kg: new KgAdapter({ path: './knowledge-graph.json' }),
-  },
-  weights: { brain: 1.0, kg: 0.8 }
-});
+const { answer, sources } = await pliamem.ask('What is the ZTB Protocol?');
+console.log(answer);
 ```
 
-## Requirements
-
-- Node.js 18+
-- Python 3.8+ (for OMPA adapter only)
-- OMPA (`pip install ompa`) if using the brain adapter
-
 ---
 
-## License
-
-Copyright 2026 Micap AI LLC. All rights reserved.
-
----
-
-## Integrations
-
-pliamem ships with adapters for these systems:
-- **[OMPA](https://github.com/jmiaie/ompa)** — semantic vector brain for AI agents
+<div align="center">
+  <p>Copyright 2026 Micap AI LLC. All rights reserved.</p>
+</div>
