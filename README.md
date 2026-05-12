@@ -21,9 +21,11 @@ It is designed with a clean **Adapter Pattern**, allowing seamless integration w
 
 ### 🌟 Key Technical Features
 - **Scalable Architecture:** Built in modular Node.js, utilizing the Adapter design pattern for limitless extensibility and separation of concerns.
-- **RESTful API & Webhooks:** Includes a built-in server for distributed agent recall across local networks.
-- **AI Synthesis Integration:** Native integration with `@heyputer/puter.js` for instant, AI-synthesized answers derived directly from your memory context.
-- **Zero-Dependency Core:** The base engine runs entirely without `npm install` requirements, ensuring lightweight deployments.
+- **Interactive AI REPL:** Continuous terminal chat session (`pliamem chat`) that seamlessly injects background memory context into conversations.
+- **Smart Context Optimization:** Dynamic chunking and truncation to respect strict LLM token limits (`--max-tokens`).
+- **Cloud State Management:** Sync local memory to the Puter Cloud KV store (`pliamem sync`) and automatically garbage collect old logs (`pliamem prune`).
+- **Sleek Cloud UI:** Features a standalone Vite-based web dashboard with dynamic glassmorphism to visualize your memory stack and AI synthesis.
+- **Zero-Dependency Core:** The base engine runs entirely without `npm install` requirements, ensuring lightweight local deployments.
 
 ---
 
@@ -31,23 +33,26 @@ It is designed with a clean **Adapter Pattern**, allowing seamless integration w
 
 ### Installation
 ```bash
-git clone https://github.com/jmiaie/pliamem-public.git pliamem
-cd pliamem
+# Install globally via NPM
+npm install -g pliamem
 ```
 
 ### Usage
 ```bash
-# Ask the AI to synthesize an answer from your memory (requires PUTER_AUTH_TOKEN)
-node src/cli.js ask "What is the ZTB Protocol?"
+# Start an interactive AI memory chat
+pliamem chat
 
-# Search across all memory layers
-node src/cli.js search "ZTB Protocol"
+# Ask a one-shot question to the AI (requires PUTER_AUTH_TOKEN)
+pliamem ask "What is the ZTB Protocol?"
 
-# Search a specific layer (e.g., your vector brain or cloud KV)
-node src/cli.js search "Tai" --layer=brain
+# Search across all memory layers with strict token limits
+pliamem search "ZTB Protocol" --max-tokens=1500
+
+# Sync local files, logs, and notices to the cloud KV store
+pliamem sync
 
 # Start the REST API server for remote agent access
-node src/server.js
+pliamem serve
 ```
 
 ---
@@ -56,23 +61,22 @@ node src/server.js
 
 ### Instalación
 ```bash
-git clone https://github.com/jmiaie/pliamem-public.git pliamem
-cd pliamem
+npm install -g pliamem
 ```
 
 ### Uso
 ```bash
-# Pide a la IA que sintetice una respuesta desde tu memoria (requiere PUTER_AUTH_TOKEN)
-node src/cli.js ask "¿Qué es el Protocolo ZTB?"
+# Iniciar un chat interactivo con IA
+pliamem chat
 
-# Buscar en todas las capas de memoria
-node src/cli.js search "ZTB Protocol"
+# Hacer una pregunta directa a la IA
+pliamem ask "¿Qué es el Protocolo ZTB?"
 
-# Buscar en una capa específica (ej. tu cerebro de vectores)
-node src/cli.js search "Tai" --layer=brain
+# Buscar en todas las capas con límite de tokens
+pliamem search "ZTB Protocol" --max-tokens=1500
 
-# Iniciar el servidor API REST para acceso remoto
-node src/server.js
+# Sincronizar archivos locales a la nube
+pliamem sync
 ```
 
 ---
@@ -81,23 +85,22 @@ node src/server.js
 
 ### Installation
 ```bash
-git clone https://github.com/jmiaie/pliamem-public.git pliamem
-cd pliamem
+npm install -g pliamem
 ```
 
 ### Utilisation
 ```bash
-# Demandez à l'IA de synthétiser une réponse à partir de votre mémoire (nécessite PUTER_AUTH_TOKEN)
-node src/cli.js ask "Qu'est-ce que le protocole ZTB ?"
+# Démarrer un chat interactif avec l'IA
+pliamem chat
 
-# Rechercher dans toutes les couches de mémoire
-node src/cli.js search "ZTB Protocol"
+# Poser une question directe à l'IA
+pliamem ask "Qu'est-ce que le protocole ZTB ?"
 
-# Rechercher dans une couche spécifique (ex. votre cerveau vectoriel)
-node src/cli.js search "Tai" --layer=brain
+# Rechercher avec une limite de jetons
+pliamem search "ZTB Protocol" --max-tokens=1500
 
-# Démarrer le serveur API REST pour l'accès distant
-node src/server.js
+# Synchroniser les fichiers locaux avec le cloud
+pliamem sync
 ```
 
 ---
