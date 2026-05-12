@@ -3,7 +3,8 @@
   <p><b>Your AI's memory, unified. A pliable memory microservice for AI swarms and agents.</b></p>
   
   [![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)](https://github.com/jmiaie/pliamem-public)
-  [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+  [![NPM](https://img.shields.io/badge/npm-v0.5.0-orange.svg)](https://www.npmjs.com/)
+  [![PyPI](https://img.shields.io/badge/pypi-v0.5.0-blue.svg)](https://pypi.org/project/pliamem/)
   [![License](https://img.shields.io/badge/license-Copyright-red.svg)](#license)
   [![Micap AI](https://img.shields.io/badge/built%20by-Micap%20AI-purple.svg)](https://github.com/jmiaie)
 </div>
