@@ -184,7 +184,7 @@ Environment variables:
   PUTER_AUTH_TOKEN     - Puter auth token (required for pliamem ask)
 
 Examples:
-  pliamem search "ZTB Protocol"
+  pliamem search "MTB Protocol"
   pliamem search "Tai" --layer=brain --json
   pliamem search "model routing" --recent --top 5
 `);

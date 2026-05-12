@@ -43,10 +43,10 @@ npm install -g pliamem
 pliamem chat
 
 # Ask a one-shot question to the AI (requires PUTER_AUTH_TOKEN)
-pliamem ask "What is the ZTB Protocol?"
+pliamem ask "What is the MTB Protocol?"
 
 # Search across all memory layers with strict token limits
-pliamem search "ZTB Protocol" --max-tokens=1500
+pliamem search "MTB Protocol" --max-tokens=1500
 
 # Sync local files, logs, and notices to the cloud KV store
 pliamem sync
@@ -70,10 +70,10 @@ npm install -g pliamem
 pliamem chat
 
 # Hacer una pregunta directa a la IA
-pliamem ask "¿Qué es el Protocolo ZTB?"
+pliamem ask "¿Qué es el Protocolo MTB?"
 
 # Buscar en todas las capas con límite de tokens
-pliamem search "ZTB Protocol" --max-tokens=1500
+pliamem search "MTB Protocol" --max-tokens=1500
 
 # Sincronizar archivos locales a la nube
 pliamem sync
@@ -94,10 +94,10 @@ npm install -g pliamem
 pliamem chat
 
 # Poser une question directe à l'IA
-pliamem ask "Qu'est-ce que le protocole ZTB ?"
+pliamem ask "Qu'est-ce que le protocole MTB ?"
 
 # Rechercher avec une limite de jetons
-pliamem search "ZTB Protocol" --max-tokens=1500
+pliamem search "MTB Protocol" --max-tokens=1500
 
 # Synchroniser les fichiers locaux avec le cloud
 pliamem sync
@@ -127,7 +127,7 @@ const { Pliamem } = require('./src');
 // Auto-initializes adapters from environment variables
 const pliamem = new Pliamem();  
 
-const { answer, sources } = await pliamem.ask('What is the ZTB Protocol?');
+const { answer, sources } = await pliamem.ask('What is the MTB Protocol?');
 console.log(answer);
 ```
 

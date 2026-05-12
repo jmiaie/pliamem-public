@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pliamem
-Version: 0.7.0
+Version: 1.0.0
 Summary: Python client for Pliamem - Unified memory recall for AI agents
 Author: Jeffrey Milam / Micap AI LLC
 Project-URL: Homepage, https://github.com/jmiaie/pliamem-public

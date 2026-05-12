@@ -112,10 +112,10 @@ const pliamem = new Pliamem({
   weights: { brain: 1.0, kg: 0.8, docs: 0.6 }
 });
 
-const results = await pliamem.recall('ZTB Protocol');
+const results = await pliamem.recall('MTB Protocol');
 // → [{ layer: 'brain', score: 0.91, content: '...', path: '...' }, ...]
 
-const { answer, sources } = await pliamem.ask('What is the ZTB Protocol?');
+const { answer, sources } = await pliamem.ask('What is the MTB Protocol?');
 // → { answer: '...', sources: [{ ref: 1, layer: 'brain', path: '...', score: 0.91 }] }
 ```
 

@@ -25,11 +25,11 @@ function setupFixtures() {
   // KG
   const kgData = {
     entities: [
-      { id: 'ztb-1', name: 'ZTB Protocol', type: 'Protocol', content: 'Agent routing hierarchy' },
+      { id: 'mtb-1', name: 'MTB Protocol', type: 'Protocol', content: 'Agent routing hierarchy' },
       { id: 'ompa-1', name: 'OMPA', type: 'Tool', content: 'Vector memory system' },
     ],
     relationships: [
-      { subject: 'Agent', predicate: 'uses', object: 'ZTB Protocol' },
+      { subject: 'Agent', predicate: 'uses', object: 'MTB Protocol' },
     ],
   };
   fs.writeFileSync(path.join(tmpDir, 'kg.json'), JSON.stringify(kgData));
@@ -37,17 +37,17 @@ function setupFixtures() {
   // Flat docs
   const docsDir = path.join(tmpDir, 'docs');
   fs.mkdirSync(docsDir);
-  fs.writeFileSync(path.join(docsDir, 'ztb.md'), '# ZTB Protocol\nDetailed protocol specification.\nVersion 2.2 updates.');
+  fs.writeFileSync(path.join(docsDir, 'mtb.md'), '# MTB Protocol\nDetailed protocol specification.\nVersion 2.2 updates.');
   fs.writeFileSync(path.join(docsDir, 'other.md'), '# Other\nUnrelated documentation.');
 
   // Daily logs
   const logsDir = path.join(tmpDir, 'logs');
   fs.mkdirSync(logsDir);
   const today = new Date().toISOString().slice(0, 10);
-  fs.writeFileSync(path.join(logsDir, `${today}.md`), '# Session\nDiscussed ZTB Protocol.\nReviewed OMPA integration.');
+  fs.writeFileSync(path.join(logsDir, `${today}.md`), '# Session\nDiscussed MTB Protocol.\nReviewed OMPA integration.');
 
   // Notices
-  fs.writeFileSync(path.join(tmpDir, 'notices.md'), '## 2026-04-25 — ZTB Protocol Update\nProtocol v2.2 released.\n\n## 2026-04-20 — General\nTeam standup notes.');
+  fs.writeFileSync(path.join(tmpDir, 'notices.md'), '## 2026-04-25 — MTB Protocol Update\nProtocol v2.2 released.\n\n## 2026-04-20 — General\nTeam standup notes.');
 }
 
 function cleanupFixtures() {
@@ -109,7 +109,7 @@ describe('Pliamem.recall()', () => {
     p.setLayer('kg', new KgAdapter({ path: path.join(tmpDir, 'kg.json') }));
     p.setLayer('docs', new FlatFileAdapter({ path: path.join(tmpDir, 'docs') }));
 
-    const results = await p.recall('ZTB Protocol');
+    const results = await p.recall('MTB Protocol');
     assert.ok(results.length >= 2, 'should get results from both layers');
 
     // Results should be sorted by finalScore
@@ -130,7 +130,7 @@ describe('Pliamem.recall()', () => {
     p.setLayer('kg', new KgAdapter({ path: path.join(tmpDir, 'kg.json') }));
     p.setLayer('docs', new FlatFileAdapter({ path: path.join(tmpDir, 'docs') }));
 
-    const results = await p.recall('ZTB Protocol', { layer: 'kg' });
+    const results = await p.recall('MTB Protocol', { layer: 'kg' });
     results.forEach(r => assert.strictEqual(r.layer, 'kg'));
   });
 
@@ -139,7 +139,7 @@ describe('Pliamem.recall()', () => {
     p.setLayer('kg', new KgAdapter({ path: path.join(tmpDir, 'kg.json') }));
     p.setLayer('docs', new FlatFileAdapter({ path: path.join(tmpDir, 'docs') }));
 
-    const results = await p.recall('ZTB', { top: 1 });
+    const results = await p.recall('MTB', { top: 1 });
     assert.strictEqual(results.length, 1);
   });
 
@@ -152,7 +152,7 @@ describe('Pliamem.recall()', () => {
     p.setLayer('kg', new KgAdapter({ path: path.join(tmpDir, 'kg.json') }));
 
     // Should not throw, should just skip the broken adapter
-    const results = await p.recall('ZTB Protocol');
+    const results = await p.recall('MTB Protocol');
     assert.ok(Array.isArray(results));
   });
 
@@ -210,7 +210,7 @@ describe('Full stack recall', () => {
     p.setLayer('logs', new DailyLogAdapter({ path: path.join(tmpDir, 'logs') }));
     p.setLayer('notices', new NoticesAdapter({ path: path.join(tmpDir, 'notices.md') }));
 
-    const results = await p.recall('ZTB Protocol');
+    const results = await p.recall('MTB Protocol');
 
     // Should get results from multiple layers
     const layers = new Set(results.map(r => r.layer));

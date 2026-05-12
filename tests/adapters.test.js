@@ -27,12 +27,12 @@ function setupFixtures() {
   // KG fixture
   const kgData = {
     entities: [
-      { id: 'ztb-1', name: 'ZTB Protocol', type: 'Protocol', content: 'Routing hierarchy for agent communication' },
+      { id: 'mtb-1', name: 'MTB Protocol', type: 'Protocol', content: 'Routing hierarchy for agent communication' },
       { id: 'tai-1', name: 'Tai', type: 'Agent', content: 'Primary AI agent' },
       { id: 'ompa-1', name: 'OMPA', type: 'Tool', content: 'Vector memory system' },
     ],
     relationships: [
-      { subject: 'Tai', predicate: 'uses', object: 'ZTB Protocol' },
+      { subject: 'Tai', predicate: 'uses', object: 'MTB Protocol' },
       { subject: 'OMPA', predicate: 'stores', object: 'memories' },
     ],
   };
@@ -41,27 +41,27 @@ function setupFixtures() {
   // Flat files fixture
   const docsDir = path.join(tmpDir, 'docs');
   fs.mkdirSync(docsDir);
-  fs.writeFileSync(path.join(docsDir, 'README.md'), '# Project\nThis is about the ZTB Protocol.\nMore details here.');
+  fs.writeFileSync(path.join(docsDir, 'README.md'), '# Project\nThis is about the MTB Protocol.\nMore details here.');
   fs.writeFileSync(path.join(docsDir, 'notes.md'), '# Notes\nSome unrelated content.\nNothing about protocols.');
   fs.writeFileSync(path.join(docsDir, 'deep.txt'), 'Not a markdown file');
 
   const subDir = path.join(docsDir, 'sub');
   fs.mkdirSync(subDir);
-  fs.writeFileSync(path.join(subDir, 'nested.md'), '# Nested\nZTB Protocol reference in nested file.');
+  fs.writeFileSync(path.join(subDir, 'nested.md'), '# Nested\nMTB Protocol reference in nested file.');
 
   // Daily log fixtures
   const logsDir = path.join(tmpDir, 'logs');
   fs.mkdirSync(logsDir);
-  fs.writeFileSync(path.join(logsDir, '2026-04-26.md'), '# Session\nDiscussed ZTB Protocol changes.\nReviewed agent architecture.');
+  fs.writeFileSync(path.join(logsDir, '2026-04-26.md'), '# Session\nDiscussed MTB Protocol changes.\nReviewed agent architecture.');
   fs.writeFileSync(path.join(logsDir, '2026-04-25.md'), '# Session\nWorked on deployment.\nNo protocol discussion.');
-  fs.writeFileSync(path.join(logsDir, '2026-04-20.md'), '# Session\nEarly ZTB Protocol draft.\nInitial design.');
+  fs.writeFileSync(path.join(logsDir, '2026-04-20.md'), '# Session\nEarly MTB Protocol draft.\nInitial design.');
   fs.writeFileSync(path.join(logsDir, 'not-a-log.md'), 'Random file that should be ignored');
 
   // Notices fixture
   const noticesContent = `# Team Notices
 
-## 2026-04-25 — ZTB Protocol Update
-The ZTB Protocol has been updated to v2.2.
+## 2026-04-25 — MTB Protocol Update
+The MTB Protocol has been updated to v2.2.
 All agents should migrate by end of week.
 
 ## 2026-04-20 — New Agent Onboarding
@@ -136,10 +136,10 @@ describe('KgAdapter', () => {
 
   it('finds entities by name match', async () => {
     const adapter = new KgAdapter({ path: path.join(tmpDir, 'kg.json') });
-    const results = await adapter.search('ZTB Protocol');
+    const results = await adapter.search('MTB Protocol');
     assert.ok(results.length >= 1);
     assert.ok(results[0].score >= 0.7, 'name match should score high');
-    assert.ok(results[0].excerpt.includes('ZTB Protocol'));
+    assert.ok(results[0].excerpt.includes('MTB Protocol'));
   });
 
   it('finds entities by type match', async () => {
@@ -188,7 +188,7 @@ describe('FlatFileAdapter', () => {
 
   it('finds matches in markdown files', async () => {
     const adapter = new FlatFileAdapter({ path: path.join(tmpDir, 'docs') });
-    const results = await adapter.search('ZTB Protocol');
+    const results = await adapter.search('MTB Protocol');
     assert.ok(results.length >= 1);
     assert.ok(results[0].score > 0);
   });
@@ -208,7 +208,7 @@ describe('FlatFileAdapter', () => {
 
   it('scores header matches higher than body matches', async () => {
     const adapter = new FlatFileAdapter({ path: path.join(tmpDir, 'docs') });
-    const results = await adapter.search('ZTB Protocol');
+    const results = await adapter.search('MTB Protocol');
     const readmeResult = results.find(r => r.path.includes('README.md'));
     assert.ok(readmeResult, 'should find README.md');
     assert.ok(readmeResult.score > 0.3, 'early-content match should boost score');
@@ -240,7 +240,7 @@ describe('DailyLogAdapter', () => {
 
   it('finds matches in daily log files', async () => {
     const adapter = new DailyLogAdapter({ path: path.join(tmpDir, 'logs') });
-    const results = await adapter.search('ZTB Protocol');
+    const results = await adapter.search('MTB Protocol');
     assert.ok(results.length >= 1);
   });
 
@@ -258,7 +258,7 @@ describe('DailyLogAdapter', () => {
 
   it('limits to recent days when opts.recent is true', async () => {
     const adapter = new DailyLogAdapter({ path: path.join(tmpDir, 'logs'), recentDays: 2 });
-    const results = await adapter.search('ZTB Protocol', { recent: true });
+    const results = await adapter.search('MTB Protocol', { recent: true });
     // With recentDays=2, should only search the 2 newest files
     assert.ok(results.length <= 2);
   });
@@ -295,20 +295,20 @@ describe('NoticesAdapter', () => {
 
   it('finds notices matching query', async () => {
     const adapter = new NoticesAdapter({ path: path.join(tmpDir, 'notices.md') });
-    const results = await adapter.search('ZTB Protocol');
+    const results = await adapter.search('MTB Protocol');
     assert.ok(results.length >= 1);
     assert.ok(results[0].score >= 0.5);
   });
 
   it('scores header matches higher', async () => {
     const adapter = new NoticesAdapter({ path: path.join(tmpDir, 'notices.md') });
-    const results = await adapter.search('ZTB Protocol');
+    const results = await adapter.search('MTB Protocol');
     assert.ok(results[0].score >= 0.9, 'header match should get 0.9');
   });
 
   it('extracts notice date from header', async () => {
     const adapter = new NoticesAdapter({ path: path.join(tmpDir, 'notices.md') });
-    const results = await adapter.search('ZTB Protocol');
+    const results = await adapter.search('MTB Protocol');
     assert.ok(results[0].metadata.noticeDate, 'should extract date');
     assert.strictEqual(results[0].metadata.noticeDate, '2026-04-25');
   });
