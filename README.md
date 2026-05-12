@@ -2,9 +2,9 @@
   <h1>🧩 Pliamem</h1>
   <p><b>Your AI's memory, unified. A pliable memory microservice for AI swarms and agents.</b></p>
   
-  [![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/jmiaie/pliamem-public)
-  [![NPM](https://img.shields.io/badge/npm-v0.7.0-orange.svg)](https://www.npmjs.com/)
-  [![PyPI](https://img.shields.io/badge/pypi-v0.7.0-blue.svg)](https://pypi.org/project/pliamem/)
+  [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/jmiaie/pliamem-public)
+  [![NPM](https://img.shields.io/badge/npm-v1.0.0-orange.svg)](https://www.npmjs.com/)
+  [![PyPI](https://img.shields.io/badge/pypi-v1.0.0-blue.svg)](https://pypi.org/project/pliamem/)
   [![License](https://img.shields.io/badge/license-Copyright-red.svg)](#license)
   [![Micap AI](https://img.shields.io/badge/built%20by-Micap%20AI-purple.svg)](https://github.com/jmiaie)
 </div>
