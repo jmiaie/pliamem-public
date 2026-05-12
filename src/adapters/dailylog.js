@@ -77,6 +77,22 @@ class DailyLogAdapter extends BaseAdapter {
     }
   }
 
+  async export() {
+    if (!fs.existsSync(this.dir)) return [];
+    let files = [];
+    try {
+      files = fs.readdirSync(this.dir).filter(f => /^\d{4}-\d{2}-\d{2}\.md$/.test(f));
+    } catch (_) { return []; }
+    
+    return files.map(file => {
+      const fullPath = path.join(this.dir, file);
+      return {
+        path: fullPath,
+        content: fs.readFileSync(fullPath, 'utf8')
+      };
+    });
+  }
+
   async status() {
     if (!fs.existsSync(this.dir)) {
       return { ok: false, stats: { error: 'directory not found' } };

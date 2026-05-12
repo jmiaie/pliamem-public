@@ -77,6 +77,16 @@ class FlatFileAdapter extends BaseAdapter {
     }
   }
 
+  async export() {
+    const data = [];
+    this._walk((full, stat) => {
+      try {
+        data.push({ path: full, content: fs.readFileSync(full, 'utf8') });
+      } catch (_) {}
+    });
+    return data;
+  }
+
   async status() {
     let count = 0;
     this._walk(() => { count++; });

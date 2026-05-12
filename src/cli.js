@@ -165,6 +165,8 @@ Usage:
   pliamem search "<query>" --max-tokens=2000  Truncate results to fit token limit
   pliamem ask "<question>"            AI-synthesized answer from memory (requires PUTER_AUTH_TOKEN)
   pliamem chat                        Interactive AI chat with memory recall
+  pliamem sync                        Sync local file memory to the Puter cloud layer
+  pliamem prune [--days=30]           Delete cloud memory older than X days
   pliamem layers status               Check all adapters
   pliamem layers list                 Show configured layers
   pliamem config get                  Show config
@@ -202,7 +204,51 @@ const opts = {
   top: parseInt(flags.find(f => f.startsWith('--top='))?.replace('--top=', '') || '0', 10),
   limit: parseInt(flags.find(f => f.startsWith('--limit='))?.replace('--limit=', '') || '5', 10),
   maxTokens: parseInt(flags.find(f => f.startsWith('--max-tokens='))?.replace('--max-tokens=', '') || '0', 10),
+  days: parseInt(flags.find(f => f.startsWith('--days='))?.replace('--days=', '') || '30', 10),
 };
+
+// ─── Command Implementations ──────────────────────────────────────────────────
+
+async function cmdSync() {
+  const pliamem = buildPliamem();
+  if (!pliamem._adapters.cloud) {
+    console.error('❌ Cloud adapter (Puter) is not configured.');
+    process.exit(1);
+  }
+
+  const cloud = pliamem._adapters.cloud;
+  let synced = 0;
+
+  console.log(`\n☁️ Syncing local layers to Puter cloud...\n${'─'.repeat(40)}`);
+
+  for (const [name, adapter] of Object.entries(pliamem._adapters)) {
+    if (name === 'cloud') continue;
+    if (typeof adapter.export === 'function') {
+      const items = await adapter.export();
+      if (!items.length) continue;
+      
+      process.stdout.write(`  Syncing [${name}] layer (${items.length} items)... `);
+      for (const item of items) {
+        await cloud.ingest({ ...item, source: name });
+        synced++;
+      }
+      console.log('✅ Done');
+    }
+  }
+  console.log(`\n🎉 Total ${synced} memory items synced to the cloud!`);
+}
+
+async function cmdPrune(days) {
+  const pliamem = buildPliamem();
+  if (!pliamem._adapters.cloud) {
+    console.error('❌ Cloud adapter (Puter) is not configured.');
+    process.exit(1);
+  }
+  
+  process.stdout.write(`\n🧹 Pruning cloud memory older than ${days} days... `);
+  const result = await pliamem._adapters.cloud.prune(days);
+  console.log(`✅ Deleted ${result.deleted} old entries.`);
+}
 
 (async () => {
   switch (cmd) {
@@ -222,6 +268,12 @@ const opts = {
       if (posArgs[0] === 'status') await cmdLayersStatus();
       else if (posArgs[0] === 'list') await cmdLayersList();
       else { await cmdHelp(); process.exit(1); }
+      break;
+    case 'sync':
+      await cmdSync();
+      break;
+    case 'prune':
+      await cmdPrune(opts.days);
       break;
     case 'config':
       if (posArgs[0] === 'get') await cmdConfigGet();

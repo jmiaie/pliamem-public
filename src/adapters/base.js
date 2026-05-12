@@ -55,6 +55,14 @@ class BaseAdapter {
   }
 
   /**
+   * Export all data from this memory layer (if supported).
+   * @returns {Promise<Array<{path: string, content: string}>>}
+   */
+  async export() {
+    return [];
+  }
+
+  /**
    * Normalize a result to the standard SearchResult format.
    * @param {Partial<SearchResult>} result
    * @param {Partial<SearchResult>} [defaults]

@@ -63,6 +63,28 @@ class PuterAdapter extends BaseAdapter {
     return { handled: true, key };
   }
 
+  async prune(days = 30) {
+    const puter = getPuter();
+    const entries = await puter.kv.list({ pattern: KEY_PREFIX + '*', returnValues: true });
+    if (!entries || !Array.isArray(entries)) return { deleted: 0 };
+
+    const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+    let deletedCount = 0;
+
+    for (const entry of entries) {
+      let data;
+      try {
+        data = typeof entry.value === 'string' ? JSON.parse(entry.value) : entry.value;
+      } catch { continue; }
+
+      if (data.ts && data.ts < cutoff) {
+        await puter.kv.del(entry.key);
+        deletedCount++;
+      }
+    }
+    return { deleted: deletedCount };
+  }
+
   async status() {
     try {
       const puter = getPuter();
