@@ -28,7 +28,32 @@ function rank(results, weights = {}, opts = {}) {
   const deduped = deduplicate(scored);
   const sorted = deduped.sort((a, b) => b.finalScore - a.finalScore);
 
-  return opts.top > 0 ? sorted.slice(0, opts.top) : sorted;
+  let finalResults = opts.top > 0 ? sorted.slice(0, opts.top) : sorted;
+
+  if (opts.maxTokens > 0) {
+    const charsPerToken = 4;
+    let currentTokens = 0;
+    const truncatedResults = [];
+
+    for (const r of finalResults) {
+      const excerptTokens = Math.ceil((r.excerpt || '').length / charsPerToken);
+      
+      if (currentTokens + excerptTokens > opts.maxTokens) {
+        const tokensLeft = opts.maxTokens - currentTokens;
+        if (tokensLeft > 0) {
+          const newExcerpt = (r.excerpt || '').slice(0, tokensLeft * charsPerToken);
+          truncatedResults.push({ ...r, excerpt: newExcerpt + '...' });
+        }
+        break;
+      }
+      
+      truncatedResults.push(r);
+      currentTokens += excerptTokens;
+    }
+    finalResults = truncatedResults;
+  }
+
+  return finalResults;
 }
 
 const DATE_PATTERN = /(\d{4}-\d{2}-\d{2})/;

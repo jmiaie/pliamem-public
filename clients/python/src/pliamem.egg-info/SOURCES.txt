@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+src/pliamem/__init__.py
+src/pliamem/client.py
+src/pliamem/exceptions.py
+src/pliamem.egg-info/PKG-INFO
+src/pliamem.egg-info/SOURCES.txt
+src/pliamem.egg-info/dependency_links.txt
+src/pliamem.egg-info/requires.txt
+src/pliamem.egg-info/top_level.txt

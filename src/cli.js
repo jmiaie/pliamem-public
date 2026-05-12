@@ -162,6 +162,7 @@ Usage:
   pliamem search "<query>" --layer=brain  Search one layer
   pliamem search "<query>" --json     Machine-readable output
   pliamem search "<query>" --recent    Recent entries only (last 3 days)
+  pliamem search "<query>" --max-tokens=2000  Truncate results to fit token limit
   pliamem ask "<question>"            AI-synthesized answer from memory (requires PUTER_AUTH_TOKEN)
   pliamem layers status               Check all adapters
   pliamem layers list                 Show configured layers
@@ -199,6 +200,7 @@ const opts = {
   layer: flags.find(f => f.startsWith('--layer='))?.replace('--layer=', '') || null,
   top: parseInt(flags.find(f => f.startsWith('--top='))?.replace('--top=', '') || '0', 10),
   limit: parseInt(flags.find(f => f.startsWith('--limit='))?.replace('--limit=', '') || '5', 10),
+  maxTokens: parseInt(flags.find(f => f.startsWith('--max-tokens='))?.replace('--max-tokens=', '') || '0', 10),
 };
 
 (async () => {

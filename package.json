@@ -1,6 +1,6 @@
 {
   "name": "pliamem",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "description": "Unified memory recall for AI agents — search your entire memory stack from one query",
   "main": "src/index.js",
   "bin": {
