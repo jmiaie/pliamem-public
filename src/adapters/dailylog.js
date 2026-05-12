@@ -53,7 +53,9 @@ class DailyLogAdapter extends BaseAdapter {
           }));
         }
         if (results.length >= limit * 3) break; // early exit
-      } catch (_) { continue; }
+      } catch (e) { 
+        console.error(`[DailyLogAdapter] Failed to read log ${full}:`, e.message);
+      }
     }
 
     return results
@@ -82,7 +84,12 @@ class DailyLogAdapter extends BaseAdapter {
     let files = [];
     try {
       files = fs.readdirSync(this.dir).filter(f => /^\d{4}-\d{2}-\d{2}\.md$/.test(f));
-    } catch (_) { return []; }
+    } catch (e) { 
+      if (e.code !== 'ENOENT') {
+        console.error(`[DailyLogAdapter] Export failed to read dir:`, e.message);
+      }
+      return []; 
+    }
     
     return files.map(file => {
       const fullPath = path.join(this.dir, file);
@@ -100,7 +107,11 @@ class DailyLogAdapter extends BaseAdapter {
     let count = 0;
     try {
       count = fs.readdirSync(this.dir).filter(f => /^\d{4}-\d{2}-\d{2}\.md$/.test(f)).length;
-    } catch (_) {}
+    } catch (e) {
+      if (e.code !== 'ENOENT') {
+        console.error(`[DailyLogAdapter] Status failed to read dir:`, e.message);
+      }
+    }
     return { ok: true, stats: { adapter: 'dailylog', logs: count, dir: this.dir } };
   }
 }

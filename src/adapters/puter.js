@@ -28,7 +28,8 @@ class PuterAdapter extends BaseAdapter {
       let data;
       try {
         data = typeof entry.value === 'string' ? JSON.parse(entry.value) : entry.value;
-      } catch {
+      } catch (e) {
+        console.warn(`[PuterAdapter] Skipping malformed entry ${entry.key}:`, e.message);
         continue;
       }
 
@@ -75,7 +76,10 @@ class PuterAdapter extends BaseAdapter {
       let data;
       try {
         data = typeof entry.value === 'string' ? JSON.parse(entry.value) : entry.value;
-      } catch { continue; }
+      } catch (e) { 
+        console.warn(`[PuterAdapter] Prune skipped malformed entry ${entry.key}:`, e.message);
+        continue; 
+      }
 
       if (data.ts && data.ts < cutoff) {
         await puter.kv.del(entry.key);

@@ -34,7 +34,11 @@ class FlatFileAdapter extends BaseAdapter {
           const stat = fs.statSync(full);
           if (stat.isDirectory()) recurse(full, depth + 1);
           else if (this.pattern.test(entry)) visitor(full, stat);
-        } catch (_) { continue; }
+        } catch (e) { 
+          if (e.code !== 'EACCES' && e.code !== 'ENOENT') {
+            console.error(`[FlatFileAdapter] Failed to stat ${full}:`, e.message);
+          }
+        }
       }
     };
     recurse(this.dir, 0);
@@ -82,7 +86,9 @@ class FlatFileAdapter extends BaseAdapter {
     this._walk((full, stat) => {
       try {
         data.push({ path: full, content: fs.readFileSync(full, 'utf8') });
-      } catch (_) {}
+      } catch (e) {
+        console.error(`[FlatFileAdapter] Failed to read ${full}:`, e.message);
+      }
     });
     return data;
   }
