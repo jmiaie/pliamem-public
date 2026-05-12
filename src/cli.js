@@ -164,6 +164,7 @@ Usage:
   pliamem search "<query>" --recent    Recent entries only (last 3 days)
   pliamem search "<query>" --max-tokens=2000  Truncate results to fit token limit
   pliamem ask "<question>"            AI-synthesized answer from memory (requires PUTER_AUTH_TOKEN)
+  pliamem chat                        Interactive AI chat with memory recall
   pliamem layers status               Check all adapters
   pliamem layers list                 Show configured layers
   pliamem config get                  Show config
@@ -212,6 +213,10 @@ const opts = {
     case 'ask':
       if (!posArgs[0]) { await cmdHelp(); process.exit(1); }
       await cmdAsk(posArgs.join(' '), opts);
+      break;
+    case 'chat':
+      const { startChat } = require('./chat');
+      await startChat(buildPliamem());
       break;
     case 'layers':
       if (posArgs[0] === 'status') await cmdLayersStatus();

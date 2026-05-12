@@ -9,8 +9,12 @@ const elements = {
   resultsContainer: document.getElementById('results-container'),
   statusText: document.getElementById('status-text'),
   statusIndicator: document.querySelector('.status-indicator'),
-  recentToggle: document.getElementById('recent-toggle')
+  recentToggle: document.getElementById('recent-toggle'),
+  modeSearch: document.getElementById('mode-search'),
+  modeAsk: document.getElementById('mode-ask'),
 };
+
+let currentMode = 'search';
 
 // Check API Status
 async function checkStatus() {
@@ -54,14 +58,23 @@ async function performSearch() {
     </div>`;
 
   try {
-    const res = await fetch(`${API_URL}/v1/recall?query=${encodeURIComponent(query)}&top=10&recent=${isRecent}`, {
-      signal: currentController.signal
-    });
+    let url = '';
+    if (currentMode === 'search') {
+      url = `${API_URL}/v1/recall?query=${encodeURIComponent(query)}&top=10&recent=${isRecent}`;
+    } else {
+      url = `${API_URL}/v1/ask?query=${encodeURIComponent(query)}`;
+    }
+
+    const res = await fetch(url, { signal: currentController.signal });
     
-    if (!res.ok) throw new Error('Search failed');
+    if (!res.ok) throw new Error('Query failed');
     const data = await res.json();
     
-    renderResults(data.results);
+    if (currentMode === 'search') {
+      renderResults(data.results);
+    } else {
+      renderAiAnswer(data);
+    }
   } catch (err) {
     if (err.name === 'AbortError') return;
     elements.resultsContainer.innerHTML = `
@@ -69,6 +82,30 @@ async function performSearch() {
         <p>Error: ${err.message}. Make sure Pliamem server is running.</p>
       </div>`;
   }
+}
+
+function renderAiAnswer(data) {
+  let html = `
+    <div class="ai-answer-card glass">
+      <h3>✨ AI Synthesis</h3>
+      <div class="ai-content">${escapeHtml(data.answer)}</div>
+    </div>
+  `;
+
+  if (data.sources && data.sources.length > 0) {
+    html += `<h4 class="sources-title">Sources Context</h4>`;
+    html += data.sources.map((r, i) => `
+      <div class="result-card glass" style="animation-delay: ${i * 0.05}s">
+        <div class="result-header">
+          <span class="result-layer">${r.layer}</span>
+          <span class="result-score">[${r.ref}] Score: ${(r.score || 0).toFixed(3)}</span>
+        </div>
+        <div class="result-path">📄 ${r.path}</div>
+      </div>
+    `).join('');
+  }
+
+  elements.resultsContainer.innerHTML = html;
 }
 
 function renderResults(results) {
@@ -107,7 +144,21 @@ elements.searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') performSearch();
 });
 elements.recentToggle.addEventListener('change', () => {
-  if (elements.searchInput.value.trim()) performSearch();
+  if (elements.searchInput.value.trim() && currentMode === 'search') performSearch();
+});
+
+elements.modeSearch.addEventListener('click', () => {
+  currentMode = 'search';
+  elements.modeSearch.classList.add('active');
+  elements.modeAsk.classList.remove('active');
+  elements.searchInput.placeholder = 'Search your unified memory...';
+});
+
+elements.modeAsk.addEventListener('click', () => {
+  currentMode = 'ask';
+  elements.modeAsk.classList.add('active');
+  elements.modeSearch.classList.remove('active');
+  elements.searchInput.placeholder = 'Ask the AI a question about your memory...';
 });
 
 // Initial Setup
