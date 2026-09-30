@@ -9,6 +9,10 @@
   [![Micap AI](https://img.shields.io/badge/built%20by-Micap%20AI-purple.svg)](https://github.com/jmiaie)
 </div>
 
+> **Canonical tree:** development and STATUS live on private [`jmiaie/pliamem`](https://github.com/jmiaie/pliamem).  
+> This public repo is a **near-mirror / showcase twin** (see [`STATUS.md`](STATUS.md)).  
+> Memory **product** SKU is [`jmiaie/ompa`](https://github.com/jmiaie/ompa) — pliamem is a recall/router layer, not a rename of OMPA.
+
 ---
 
 ## 📖 About Pliamem
